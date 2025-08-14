@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+video-player-container {
+  width: 75%;
+  margin: 8px auto;
+  display: grid !important;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+video-player-container:has(> :nth-child(2)) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+video-player-container:has(> :nth-child(5)) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+video-player-container:has(> :nth-child(17)) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+video-player {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16/9;
+}
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  place-items: center;
+  min-width: 90vw;
+  min-height: 90vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #007bff;
+  color: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+
+button:hover {
+  background-color: #535bf2;
+  border-color: #646cff;
+}
+
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
