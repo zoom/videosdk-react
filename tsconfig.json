@@ -2,12 +2,17 @@
   "compilerOptions": {
     "target": "esnext",
     "jsx": "react",
-    "lib": ["es2023"],
+    "lib": [
+      "es2023",
+      "dom"
+    ],
     "moduleDetection": "force",
     "module": "preserve",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "types": ["node"],
+    "types": [
+      "node",
+    ],
     "strict": true,
     "noUnusedLocals": true,
     "declaration": true,
@@ -17,5 +22,7 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

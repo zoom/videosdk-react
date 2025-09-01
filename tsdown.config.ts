@@ -5,5 +5,6 @@ export default defineConfig([
     entry: ['./src/index.ts'],
     platform: 'neutral',
     dts: true,
+    external: ['@zoom/videosdk', "react", "react-dom"],
   },
 ])
