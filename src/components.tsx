@@ -7,12 +7,12 @@ import type { event_active_share_change, Participant, ScreenShareOption } from "
  * React context for sharing video container reference
  * Used internally by VideoPlayerComponent to access the video container
  */
-const VideoPlayerContext = React.createContext<React.RefObject<HTMLDivElement | null> | null>(null);
+export const VideoPlayerContext = React.createContext<React.RefObject<HTMLDivElement | null> | null>(null);
 
 /**
  * Props for VideoPlayerContainerComponent
  */
-type VideoPlayerContainerProps = {
+export type VideoPlayerContainerProps = {
     /** Child components to render inside the container */
     children: React.ReactNode;
 } & React.HTMLAttributes<HTMLElement>;
@@ -52,7 +52,7 @@ const VideoPlayerContainerComponent = ({ children, ...props }: VideoPlayerContai
 /**
  * Props for VideoPlayerComponent
  */
-type VideoPlayerProps = {
+export type VideoPlayerProps = {
     /** Participant object from @zoom/videosdk containing user information */
     user: Participant;
     /** Video quality setting from @zoom/videosdk (default: VideoQuality.Video_360P) */
@@ -145,7 +145,7 @@ const VideoPlayerComponent = ({ user, quality = VideoQuality.Video_360P }: Video
  * Props for RemoteScreenShareComponent
  * Extends canvas HTML attributes for styling and behavior
  */
-type RemoteScreenShareProps = React.CanvasHTMLAttributes<HTMLCanvasElement>;
+export type RemoteScreenShareProps = React.CanvasHTMLAttributes<HTMLCanvasElement>;
 
 /**
  * Component for displaying remote screen sharing content
@@ -190,7 +190,10 @@ const RemoteScreenShareComponent = (props: RemoteScreenShareProps) => {
     )
 }
 
-type ScreenshareRef = React.RefObject<{ requestShare: (options?: ScreenShareOption) => void } | null>
+/**
+ * Ref type for ScreenshareComponent
+ */
+export type ScreenshareRef = React.RefObject<{ requestShare: (options?: ScreenShareOption) => void } | null>
 
 /**
  * Component for displaying the local screen share

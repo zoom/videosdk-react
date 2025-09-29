@@ -1,11 +1,12 @@
 import React from 'react'
 import ZoomVideo, { AudioChangeAction, type AudioOption, type Participant, type InitOptions, type CaptureVideoOption, ConnectionState, type ConnectionChangePayload, type ScreenShareOption } from "@zoom/videosdk";
 import { useDeepCompareEffect } from './utils';
+import type { ScreenshareRef } from './components';
 
 /**
  * Configuration options for session media settings
  */
-type SessionMediaOptions = {
+export type SessionMediaOptions = {
     /** Whether to disable audio when joining the session */
     disableAudio?: boolean;
     /** Whether to disable video when joining the session */
@@ -23,7 +24,7 @@ type SessionMediaOptions = {
 /**
  * Configuration options for session initialization
  */
-type SessionInitOptions = {
+export type SessionInitOptions = {
     /** Language setting for the session (default: "en-US") */
     language?: string;
     /** Asset loading strategy: "CDN", "Global", "CN", or custom string */
@@ -35,7 +36,7 @@ type SessionInitOptions = {
 /**
  * Combined session configuration options
  */
-type SessionOptions = SessionMediaOptions & SessionInitOptions
+export type SessionOptions = SessionMediaOptions & SessionInitOptions
 
 /**
  * Hook to join a Zoom Video SDK session
@@ -109,9 +110,7 @@ const useSession = (
 
         client.on('connection-change', connectionHandler)
 
-        initSession();
-
-        async function initSession() {
+        const initSession = async () => {
             setIsLoading(true);
             try {
                 await client.init(language ?? "en-US", dependentAssets ?? "Global", initOptions);
@@ -134,7 +133,9 @@ const useSession = (
                 setError(e as string);
             }
             setIsLoading(false);
-        }
+        };
+
+        initSession();
 
         return () => {
             setInSession(false);
@@ -153,7 +154,6 @@ const useSession = (
 
     return { isInSession, isError, error, isLoading };
 }
-
 /**
  * Hook to access participants in the current session
  * 
@@ -175,7 +175,7 @@ const useSession = (
  * ```
  */
 const useSessionUsers = () => {
-    const [sessionUsers, setSessionUsers] = React.useState<Participant[]>([]);
+    const [sessionUsers, setSessionUsers] = React.useState<Array<Participant>>([]);
     const client = ZoomVideo.createClient();
 
     React.useEffect(() => {
@@ -387,8 +387,6 @@ const useAudioState = () => {
 
     return { isAudioMuted, toggleMute, toggleCapture, setMute, setCapture, isCapturingAudio };
 }
-
-type ScreenshareRef = React.RefObject<{ requestShare: (options?: ScreenShareOption) => void } | null>
 
 /**
  * Hook to share screen
