@@ -1,6 +1,6 @@
 import React from "react";
 import type { ScreenShareOption } from "@zoom/videosdk";
-import type { ScreenshareRef } from "../../components";
+import type { ScreenshareRef } from "../../components/LocalScreenShareComponent/LocalScreenShareComponent";
 
 /**
  * Hook to share screen
