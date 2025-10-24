@@ -1,5 +1,5 @@
 import React from "react";
-import ZoomVideo from "@zoom/videosdk";
+import ZoomVideo, { type CaptureVideoOption } from "@zoom/videosdk";
 
 /**
  * Hook to access and manage video state
@@ -50,7 +50,7 @@ const useVideoState = () => {
    * Toggle video capture on/off
    * @param videoOptions - Optional video configuration options from @zoom/videosdk
    */
-  const toggleVideo = async (videoOptions?: any) => {
+  const toggleVideo = async (videoOptions?: CaptureVideoOption) => {
     const mediaStream = client.getMediaStream();
     if (videoState) {
       await mediaStream.stopVideo();
@@ -64,7 +64,7 @@ const useVideoState = () => {
    * @param videoState - Whether to enable video capture
    * @param videoOptions - Optional video configuration options from @zoom/videosdk
    */
-  const setVideo = async (videoStateArg: boolean, videoOptions?: any) => {
+  const setVideo = async (videoStateArg: boolean, videoOptions?: CaptureVideoOption) => {
     const mediaStream = client.getMediaStream();
     if (videoStateArg) {
       await mediaStream.startVideo(videoOptions);

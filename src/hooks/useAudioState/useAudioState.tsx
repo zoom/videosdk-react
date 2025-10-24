@@ -1,5 +1,5 @@
 import React from "react";
-import ZoomVideo, { AudioChangeAction } from "@zoom/videosdk";
+import ZoomVideo, { AudioChangeAction, type AudioOption } from "@zoom/videosdk";
 
 /**
  * Hook to access and manage audio state
@@ -84,7 +84,7 @@ const useAudioState = () => {
    * @param capture - Whether to capture audio
    * @param audioOptions - Optional audio configuration options from @zoom/videosdk
    */
-  const setCapture = async (capture: boolean, audioOptions?: any) => {
+  const setCapture = async (capture: boolean, audioOptions?: AudioOption) => {
     const mediaStream = client.getMediaStream();
     if (capture) {
       await mediaStream.startAudio(audioOptions);
@@ -109,7 +109,7 @@ const useAudioState = () => {
    * Toggle audio capture state
    * @param audioOptions - Optional audio configuration options from @zoom/videosdk
    */
-  const toggleCapture = async (audioOptions?: any) => {
+  const toggleCapture = async (audioOptions?: AudioOption) => {
     const mediaStream = client.getMediaStream();
     if (isCapturingAudio) {
       await mediaStream.stopAudio();
