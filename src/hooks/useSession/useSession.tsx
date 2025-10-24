@@ -3,8 +3,6 @@ import ZoomVideo, {
   type InitOptions,
   ConnectionState,
   type ConnectionChangePayload,
-  type AudioOption,
-  type CaptureVideoOption,
 } from "@zoom/videosdk";
 import { useDeepCompareEffect } from "../../utils";
 
@@ -17,9 +15,9 @@ export type SessionMediaOptions = {
   /** Whether to disable video when joining the session */
   disableVideo?: boolean;
   /** Audio configuration options from @zoom/videosdk */
-  audioOptions?: AudioOption;
+  audioOptions?: any;
   /** Video configuration options from @zoom/videosdk */
-  videoOptions?: CaptureVideoOption;
+  videoOptions?: any;
   /** Whether to wait before automatically joining the session */
   waitBeforeJoining?: boolean;
   /** Whether to end the session when the current user leaves (host only) */
