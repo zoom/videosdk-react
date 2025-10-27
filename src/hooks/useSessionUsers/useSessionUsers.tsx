@@ -1,5 +1,5 @@
 import React from "react";
-import ZoomVideo from "@zoom/videosdk";
+import ZoomVideo, { type Participant } from "@zoom/videosdk";
 
 /**
  * Hook to access participants in the current session
@@ -22,7 +22,7 @@ import ZoomVideo from "@zoom/videosdk";
  * ```
  */
 const useSessionUsers = () => {
-  const [sessionUsers, setSessionUsers] = React.useState<Array<any>>([]);
+  const [sessionUsers, setSessionUsers] = React.useState<Participant[]>([]);
   const client = ZoomVideo.createClient();
 
   React.useEffect(() => {
