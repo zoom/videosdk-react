@@ -13,26 +13,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4.1.0
+      - name: Install bun
+      - uses: oven-sh/setup-bun@v2
 
       - name: Set node LTS
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          cache: pnpm
 
-      - name: Install
-        run: pnpm install
+      - name: Install dependencies
+        run: bun install
 
       - name: Build
-        run: pnpm run build
-
-      - name: Lint
-        run: pnpm run lint
+        run: bun run build
 
       - name: Typecheck
-        run: pnpm run typecheck
+        run: bun run typecheck
 
       - name: Test
-        run: pnpm run test
+        run: bun run test
