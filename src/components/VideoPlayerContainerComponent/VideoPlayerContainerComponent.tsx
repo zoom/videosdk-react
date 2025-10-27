@@ -1,6 +1,7 @@
 import React from "react";
 
 /**
+ * @internal
  * React context for sharing video container reference
  * Used internally by VideoPlayerComponent to access the video container
  */
