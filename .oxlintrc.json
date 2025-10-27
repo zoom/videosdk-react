@@ -1,0 +1,7 @@
+{
+    "ignorePatterns": [
+        "**/*.spec.ts",
+        "**/*.spec.tsx",
+        "playground/"
+    ]
+}

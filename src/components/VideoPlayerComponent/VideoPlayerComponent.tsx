@@ -89,19 +89,19 @@ const VideoPlayerComponent = ({ user, quality = VideoQuality.Video_360P }: Video
           element.remove();
         }
       } catch (err) {
-        console.warn("No video element found for userId: ", user.userId);
+        console.warn("No video element found for userId: ", user.userId, err);
         return null;
       }
     };
 
     if (user.bVideoOn) {
-      attachVideo();
+      void attachVideo();
     } else {
-      detachVideo();
+      void detachVideo();
     }
 
     return () => {
-      detachVideo();
+      void detachVideo();
     };
   }, [user.bVideoOn, user.userId, client, videoContainerRef, quality]);
   return <></>;

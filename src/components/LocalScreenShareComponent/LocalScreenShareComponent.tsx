@@ -103,7 +103,11 @@ const LocalScreenShareComponent: React.FC<{ ref: ScreenshareRef }> = React.forwa
       }
 
       return () => {
-        mediaStream.stopShareScreen();
+        try {
+          void mediaStream.stopShareScreen();
+        } catch (e) {
+          console.error("Can't stopShareScreen", e);
+        }
       };
     };
 
