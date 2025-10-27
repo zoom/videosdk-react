@@ -24,13 +24,21 @@ const RemoteScreenShareComponent = (props: RemoteScreenShareProps) => {
   const [isRendering, setIsRendering] = React.useState(false);
 
   React.useEffect(() => {
-    const handler: typeof event_active_share_change = (payload) => {
+    const handler: typeof event_active_share_change = async (payload) => {
       const stream = client.getMediaStream();
       if (payload.state === "Active") {
-        stream.startShareView(ref.current as HTMLCanvasElement, payload.userId);
+        try {
+          await stream.startShareView(ref.current as HTMLCanvasElement, payload.userId);
+        } catch (e) {
+          console.error("Failed to start share view", e);
+        }
         setIsRendering(true);
       } else if (payload.state === "Inactive") {
-        stream.stopShareView();
+        try {
+          await stream.stopShareView();
+        } catch (e) {
+          console.error("Failed to stop share view", e);
+        }
         setIsRendering(false);
       }
     };

@@ -33,6 +33,7 @@ export type SessionInitOptions = {
   /** Language setting for the session (default: "en-US") */
   language?: string;
   /** Asset loading strategy: "CDN", "Global", "CN", or custom string */
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   dependentAssets?: string | "CDN" | "Global" | "CN";
   /** Additional initialization options from @zoom/videosdk */
   initOptions?: InitOptions;
@@ -153,7 +154,7 @@ const useSession = (
       setIsLoading(false);
     };
 
-    initSession();
+    void initSession();
 
     return () => {
       setInSession(false);

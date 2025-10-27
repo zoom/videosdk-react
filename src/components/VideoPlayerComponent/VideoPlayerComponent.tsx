@@ -67,7 +67,7 @@ const VideoPlayerComponent = ({ user, quality = VideoQuality.Video_360P }: Video
           console.error(
             `%c[VideoPlayer] Error attaching video for userId: ${user.userId}`,
             "color: orange",
-            e,
+            e
           );
           return null;
         });
@@ -79,27 +79,29 @@ const VideoPlayerComponent = ({ user, quality = VideoQuality.Video_360P }: Video
     };
 
     const detachVideo = async () => {
-      const element = await mediaStream.detachVideo(user.userId).catch(() => {
-        console.warn("No video element found for userId: ", user.userId);
+      try {
+        const element = await mediaStream.detachVideo(user.userId);
+        const toRemove = container.querySelectorAll(videoSelector);
+        toRemove.forEach((el) => el.remove());
+        if (Array.isArray(element)) {
+          element.forEach((el) => el.remove());
+        } else if (element) {
+          element.remove();
+        }
+      } catch (err) {
+        console.warn("No video element found for userId: ", user.userId, err);
         return null;
-      });
-      const toRemove = container.querySelectorAll(videoSelector);
-      toRemove.forEach((el) => el.remove());
-      if (Array.isArray(element)) {
-        element.forEach((el) => el.remove());
-      } else if (element) {
-        element.remove();
       }
     };
 
     if (user.bVideoOn) {
-      attachVideo();
+      void attachVideo();
     } else {
-      detachVideo();
+      void detachVideo();
     }
 
     return () => {
-      detachVideo();
+      void detachVideo();
     };
   }, [user.bVideoOn, user.userId, client, videoContainerRef, quality]);
   return <></>;

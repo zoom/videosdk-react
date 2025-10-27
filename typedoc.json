@@ -1,8 +1,8 @@
 {
     "$schema": "https://typedoc.org/schema.json",
     "entryPoints": [
-        "src/components.tsx",
-        "src/hooks.tsx"
+        "src/components/index.ts",
+        "src/hooks/index.ts"
     ],
     "entryPointStrategy": "expand",
     "out": "docs",
