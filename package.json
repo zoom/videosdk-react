@@ -48,6 +48,7 @@
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.1.0",
     "@vitest/coverage-v8": "^4.0.3",
+    "@zoom/videosdk": "^2.2.12",
     "bumpp": "^10.3.1",
     "happy-dom": "^20.0.8",
     "jsrsasign": "^11.1.0",
@@ -64,10 +65,10 @@
     "vitest": "^4.0.3"
   },
   "dependencies": {
-    "@zoom/videosdk": "^2.2.12",
     "dequal": "^2.0.3"
   },
   "peerDependencie": {
+    "@zoom/videosdk": "^2.2.12",
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0"
   },

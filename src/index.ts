@@ -25,7 +25,3 @@
  */
 export * from "./hooks";
 export * from "./components";
-
-export * from "@zoom/videosdk";
-import ZoomVideo from "@zoom/videosdk";
-export default ZoomVideo;
