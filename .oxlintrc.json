@@ -3,5 +3,9 @@
         "**/*.spec.ts",
         "**/*.spec.tsx",
         "playground/"
+    ],
+    "plugins": [
+        "react",
+        "typescript"
     ]
 }

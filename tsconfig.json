@@ -13,6 +13,9 @@
     "types": [
       "@testing-library/jest-dom",
       "node",
+      "@zoom/videosdk",
+      "react",
+      "react-dom"
     ],
     "strict": true,
     "noUnusedLocals": true,
