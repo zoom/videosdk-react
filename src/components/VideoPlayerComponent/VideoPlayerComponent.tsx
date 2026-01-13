@@ -5,30 +5,71 @@ import type { Participant } from "@zoom/videosdk";
 import { VideoPlayerContext } from "../VideoPlayerContainerComponent/VideoPlayerContainerComponent";
 import type { VideoClient } from "../../test-types";
 
-const attachVideo = async (container: HTMLDivElement, videoSelector: string, userId: number, mediaStream: ReturnType<VideoClient["getMediaStream"]>, quality: VideoQuality) => {
-  if (!container.querySelector(videoSelector)) {
-    const userVideo = await mediaStream.attachVideo(userId, quality).catch((e) => {
-      console.error(
-        `%c[VideoPlayer] Error attaching video for userId: ${userId}`,
+const attachVideo = async (
+  container: HTMLDivElement,
+  videoSelector: string,
+  userId: number,
+  mediaStream: ReturnType<VideoClient["getMediaStream"]>,
+  quality: VideoQuality
+): Promise<boolean> => {
+  // Check if video element already exists - prevents duplicate attachments
+  if (container.querySelector(videoSelector)) {
+    return false; // Already attached
+  }
+
+  const userVideo = await mediaStream.attachVideo(userId, quality).catch((e) => {
+    console.error(
+      `%c[VideoPlayer] Error attaching video for userId: ${userId}`,
+      "color: orange",
+      e
+    );
+    return null;
+  });
+
+  if (userVideo) {
+    // Double-check element wasn't added while we were awaiting
+    if (!container.querySelector(videoSelector)) {
+      (userVideo as HTMLElement).setAttribute("data-user-id", String(userId));
+      container.appendChild(userVideo as VideoPlayerType);
+      return true;
+    } else {
+      // Element was added by another call, clean up our duplicate
+      (userVideo as HTMLElement).remove();
+      return false;
+    }
+  }
+  return false;
+};
+
+const detachVideo = async (
+  container: HTMLDivElement,
+  videoSelector: string,
+  userId: number,
+  mediaStream: ReturnType<VideoClient["getMediaStream"]>
+) => {
+  // Only detach if element actually exists
+  const existingElement = container.querySelector(videoSelector);
+  if (!existingElement) {
+    return;
+  }
+
+  try {
+    const element = await mediaStream.detachVideo(userId).catch((e) => {
+      console.warn(
+        `%c[VideoPlayer] Error detaching video for userId: ${userId}`,
         "color: orange",
         e
       );
       return null;
     });
-    if (userVideo) {
-      (userVideo as HTMLElement).setAttribute("data-user-id", String(userId));
-      container.appendChild(userVideo as VideoPlayerType);
-    }
-  }
-};
-
-const detachVideo = async (container: HTMLDivElement, videoSelector: string, userId: number, mediaStream: ReturnType<VideoClient["getMediaStream"]>) => {
-  try {
-    const element = await mediaStream.detachVideo(userId);
     const toRemove = container.querySelectorAll(videoSelector);
-    toRemove.forEach((el) => el.remove());
+    toRemove.forEach((el) => {
+      el.remove();
+    });
     if (Array.isArray(element)) {
-      element.forEach((el) => el.remove());
+      element.forEach((el) => {
+        el.remove();
+      });
     } else if (element) {
       element.remove();
     }
@@ -79,10 +120,20 @@ export type VideoPlayerProps = {
  */
 const VideoPlayerComponent = ({ user, quality = VideoQuality.Video_360P }: VideoPlayerProps) => {
   const client = ZoomVideo.createClient();
-  const videoMutexRef = React.useRef(false);
+  // Track if this component instance is mounted - used to prevent cleanup race conditions
+  const isMountedRef = React.useRef(true);
   // For React 18 compat
   // eslint-disable-next-line react-x/no-use-context
   const videoContainerRef = React.useContext(VideoPlayerContext);
+
+  // Set mounted state on mount/unmount
+  React.useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   React.useEffect(() => {
     if (!videoContainerRef) {
       console.error("Please wrap the VideoPlayerComponent in a VideoPlayerContainer");
@@ -95,28 +146,24 @@ const VideoPlayerComponent = ({ user, quality = VideoQuality.Video_360P }: Video
     const container = videoContainerRef.current;
     const videoSelector = `[data-user-id='${user.userId}']`;
 
-    if (videoMutexRef.current) {
-      return;
-    }
-    videoMutexRef.current = true;
     if (user.bVideoOn) {
-      void attachVideo(container, videoSelector, user.userId, mediaStream, quality)
-        .then(() => {
-          videoMutexRef.current = false;
-        });
+      // attachVideo already checks if element exists, so no mutex needed
+      void attachVideo(container, videoSelector, user.userId, mediaStream, quality);
     } else {
-      void detachVideo(container, videoSelector, user.userId, mediaStream)
-        .then(() => {
-          videoMutexRef.current = false;
-        });
+      void detachVideo(container, videoSelector, user.userId, mediaStream);
     }
+
     return () => {
-      void detachVideo(container, videoSelector, user.userId, mediaStream)
-        .then(() => {
-          videoMutexRef.current = false;
-        });
+      // Only detach on true unmount, not React Strict Mode's simulated unmount
+      // We defer cleanup slightly to allow React Strict Mode's second mount to run first
+      setTimeout(() => {
+        if (!isMountedRef.current) {
+          void detachVideo(container, videoSelector, user.userId, mediaStream);
+        }
+      }, 0);
     };
   }, [user.bVideoOn, user.userId, client, videoContainerRef, quality]);
+
   return <></>;
 };
 

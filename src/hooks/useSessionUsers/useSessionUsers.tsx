@@ -1,5 +1,5 @@
 import React from "react";
-import ZoomVideo, { type Participant } from "@zoom/videosdk";
+import ZoomVideo, { ConnectionState, type event_connection_change, type Participant } from "@zoom/videosdk";
 
 /**
  * Hook to access participants in the current session
@@ -36,6 +36,19 @@ const useSessionUsers = () => {
       client.off("user-added", handler);
       client.off("user-removed", handler);
       client.off("user-updated", handler);
+    };
+  }, [client]);
+
+  React.useEffect(() => {
+    const connectionHandler: typeof event_connection_change = (event) => {
+      if (event.state === ConnectionState.Closed) {
+        setSessionUsers([]);
+      }
+    };
+    client.on("connection-change", connectionHandler);
+
+    return () => {
+      client.off("connection-change", connectionHandler);
     };
   }, [client]);
 

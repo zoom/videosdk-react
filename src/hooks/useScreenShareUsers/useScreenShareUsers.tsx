@@ -28,9 +28,9 @@ const useScreenShareUsers = () => {
   React.useEffect(() => {
     const handler: typeof event_peer_share_state_change = (e) => {
       if (e.action === 'Start') {
-        setScreenShareUsers(p=>[...p, e.userId])
+        setScreenShareUsers(p => [...p, e.userId])
       } else {
-        setScreenShareUsers(p=>p.filter(id=>id !== e.userId))
+        setScreenShareUsers(p => p.filter(id => id !== e.userId))
       }
     };
     client.on("peer-share-state-change", handler);
