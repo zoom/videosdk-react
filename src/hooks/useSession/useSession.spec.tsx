@@ -214,7 +214,7 @@ describe("useSession", () => {
   });
 
   it("should set isError to true when join fails", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
 
     mockClient.join.mockRejectedValueOnce(new Error("Join failed"));
 
@@ -331,7 +331,7 @@ describe("useSession", () => {
   });
 
   it("should warn when non-host tries to use endSessionOnLeave option", async () => {
-    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
 
     mockClient.isHost.mockReturnValue(false);
 
@@ -351,6 +351,65 @@ describe("useSession", () => {
 
     await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith("User is not host, cannot end session");
+    });
+
+    consoleSpy.mockRestore();
+  });
+
+  it("should set isLoading to true and isInSession to false on Reconnecting state", async () => {
+    let connectionChangeHandler: typeof ConnectionChangeFn | undefined;
+
+    mockClient.on.mockImplementation((event: string, callback: (payload: any) => void) => {
+      if (event === "connection-change") {
+        connectionChangeHandler = callback;
+      }
+    });
+
+    const { result } = renderHook(() => useSession("topic", "token", "username"));
+
+    await waitFor(() => {
+      expect(mockClient.on).toHaveBeenCalled();
+    });
+
+    // First set to connected
+    act(() => {
+      connectionChangeHandler?.({ state: ConnectionState.Connected });
+    });
+
+    await waitFor(() => {
+      expect(result.current.isInSession).toEqual(true);
+      expect(result.current.isLoading).toEqual(false);
+    });
+
+    // Then trigger reconnecting
+    act(() => {
+      connectionChangeHandler?.({ state: ConnectionState.Reconnecting });
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toEqual(true);
+      expect(result.current.isInSession).toEqual(false);
+      expect(result.current.isError).toEqual(false);
+    });
+  });
+
+  it("should handle errors when leaving session", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    const leaveError = new Error("Failed to leave session");
+
+    mockClient.leave.mockRejectedValue(leaveError);
+
+    const { unmount } = renderHook(() => useSession("topic", "token", "username"));
+
+    await waitFor(() => {
+      expect(mockClient.join).toHaveBeenCalled();
+    });
+
+    unmount();
+
+    await waitFor(() => {
+      expect(mockClient.leave).toHaveBeenCalled();
+      expect(consoleSpy).toHaveBeenCalledWith("Error in leaving session: ", leaveError);
     });
 
     consoleSpy.mockRestore();

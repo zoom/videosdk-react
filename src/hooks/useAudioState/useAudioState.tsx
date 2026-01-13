@@ -1,5 +1,5 @@
 import React from "react";
-import ZoomVideo, { AudioChangeAction, type AudioOption } from "@zoom/videosdk";
+import ZoomVideo, { AudioChangeAction, type event_current_audio_change, type AudioOption } from "@zoom/videosdk";
 
 /**
  * Hook to access and manage audio state
@@ -49,7 +49,7 @@ const useAudioState = () => {
     const mediaStream = client.getMediaStream();
     setIsAudioMuted(mediaStream.isAudioMuted());
 
-    const handler = (e: { action: AudioChangeAction; type: "phone" | "computer" }) => {
+    const handler: typeof event_current_audio_change = (e) => {
       if (e.action === AudioChangeAction.Leave) {
         setIsCapturingAudio(false);
         setIsAudioMuted(mediaStream.isAudioMuted());

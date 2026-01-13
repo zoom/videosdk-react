@@ -16,7 +16,7 @@
         "@types/react-dom": "^19.2.2",
         "@vitejs/plugin-react": "^5.1.0",
         "@vitest/coverage-v8": "^4.0.3",
-        "@zoom/videosdk": "^2.2.12",
+        "@zoom/videosdk": "^2.3.5",
         "bumpp": "^10.3.1",
         "happy-dom": "^20.0.8",
         "jsrsasign": "^11.1.0",
@@ -264,7 +264,7 @@
 
     "@vitest/utils": ["@vitest/utils@4.0.3", "", { "dependencies": { "@vitest/pretty-format": "4.0.3", "tinyrainbow": "^3.0.3" } }, "sha512-qV6KJkq8W3piW6MDIbGOmn1xhvcW4DuA07alqaQ+vdx7YA49J85pnwnxigZVQFQw3tWnQNRKWwhz5wbP6iv/GQ=="],
 
-    "@zoom/videosdk": ["@zoom/videosdk@2.2.12", "", {}, "sha512-tyNqGv181BIoZTj1QHQAv95Wa+6NtxJTIDsVm7oxvj0TnWdAmk5uz+3U7LPQ14cNo/FFZR/9cYVKc9f0QQe5BA=="],
+    "@zoom/videosdk": ["@zoom/videosdk@2.3.5", "", {}, "sha512-Zs/ASdN/n7uNxrHcQ7qsRyoBFMIy0CRCe1R70zbqlNiQJ+N7bwsFpfsxOrjljYBOkbkjzCMEszZPSpB6ZHMVxg=="],
 
     "ansi-regex": ["ansi-regex@5.0.1", "", {}, "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="],
 

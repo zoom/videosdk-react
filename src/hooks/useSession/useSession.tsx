@@ -149,7 +149,7 @@ const useSession = (
       } catch (e) {
         setIsError(true);
         console.error("Error in session join: ", e);
-        setError(e as string);
+        setError(e instanceof Error ? e.message : String(e));
       }
       setIsLoading(false);
     };

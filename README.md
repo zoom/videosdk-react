@@ -32,14 +32,21 @@ npm install @zoom/videosdk-react
 
 ```
 src/
-├── sdk/
-│   ├── index.ts          # Main SDK exports
-│   ├── hooks.tsx         # Custom React hooks
-│   ├── components.tsx    # React components
-│   └── utils.ts          # Utility functions
-├── App.tsx               # Example application
-├── JWT.ts               # JWT token generation
-└── main.tsx             # Application entry point
+├── components/           # React components
+│   ├── index.ts         # Component exports
+│   └── ...              # Individual component directories
+├── hooks/               # Custom React hooks
+│   ├── index.ts         # Hook exports
+│   └── ...              # Individual hook directories
+├── index.ts             # Main SDK exports
+├── utils.ts             # Utility functions
+└── test-types.ts        # Type definitions
+
+playground/              # Example application
+├── src/
+│   ├── App.tsx          # Example application
+│   ├── JWT.ts           # JWT token generation
+│   └── main.tsx         # Application entry point
 ```
 
 ## Quick Start
@@ -47,7 +54,7 @@ src/
 ### Basic Video Chat Implementation
 
 ```tsx
-import { useSession, useSessionUsers, VideoPlayerComponent, VideoPlayerContainerComponent } from './sdk';
+import { useSession, useSessionUsers, VideoPlayerComponent, VideoPlayerContainerComponent } from '@zoom/videosdk-react';
 
 function VideoChat() {
   const { isInSession, isLoading, isError } = useSession(
@@ -110,7 +117,7 @@ const { isInSession, isLoading, isError, error } = useSession(
 
 ### `useSessionUsers`
 
-Provides real-time access to session participants.
+Provides real-time access to all session participants.
 
 ```tsx
 const participants = useSessionUsers();
@@ -120,6 +127,33 @@ const participants = useSessionUsers();
     <VideoPlayerComponent key={participant.userId}  user={participant} />
   ))}
 </VideoPlayerContainerComponent>
+```
+
+### `useMyself`
+
+Provides access the local user in the current session.
+```tsx
+const myself = useMyself();
+
+return (
+  <div>
+    {myself.userName} - {myself.bVideoOn ? 'Video On' : 'Video Off'}
+  </div>
+);
+```
+
+### `useScreenShareUsers`
+
+Provides real-time access to all session participants who are sharing their screen.
+
+```tsx
+const screenshareusers = useScreenShareUsers();
+
+<ScreenShareContainerComponent>
+  {screenshareusers.map(userId => (
+    <ScreenSharePlayerComponent key={userId} userId={userId} />
+  ))}
+</ScreenShareContainerComponent>
 ```
 
 ### `useVideoState`
@@ -206,22 +240,28 @@ const participants = useSessionUsers()
 <VideoPlayerComponent user={participants[0]} />
 ```
 
-### `LocalScreenShareComponent`
+### `ScreenShareContainerComponent`
 
-Handles local screen sharing display.
+Container wrapper for screen share players. Must wrap all `ScreenSharePlayerComponent` instances.
 
 ```tsx
-const { ScreenshareRef } = useScreenshare();
+const screenshareusers = useScreenShareUsers();
 
-<LocalScreenShareComponent ref={ScreenshareRef} />
+<ScreenShareContainerComponent style={{ width: '100%', height: '400px' }}>
+  {screenshareusers.map(userId => (
+    <ScreenSharePlayerComponent key={userId} userId={userId} />
+  ))}
+</ScreenShareContainerComponent>
 ```
 
-### `RemoteScreenShareComponent`
+### `ScreenSharePlayerComponent`
 
-Displays remote screen sharing content.
+Renders individual participant video streams.
 
 ```tsx
-<RemoteScreenShareComponent />
+const screenshareusers = useScreenShareUsers();
+
+<ScreenSharePlayerComponent userId={screenshareusers[0]} />
 ```
 
 ## Running the Project
@@ -230,8 +270,8 @@ Displays remote screen sharing content.
 # Install dependencies
 npm install
 
-# Copy .env.example to .env and fill in the values
-cp .env.example .env
+# Copy example.env to .env and fill in the values
+cp example.env .env
 
 # Start development server
 npm run dev

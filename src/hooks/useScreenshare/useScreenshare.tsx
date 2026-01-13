@@ -27,18 +27,18 @@ import type { ScreenshareRef } from "../../components/LocalScreenShareComponent/
  */
 const useScreenshare = () => {
   const ScreenshareRef: ScreenshareRef = React.useRef(null);
-
   /**
    * Start screen sharing with optional configuration
    * @param options - Optional screen share configuration from @zoom/videosdk
    */
-  const startScreenshare = React.useCallback((options?: ScreenShareOption) => {
+  const startScreenshare = React.useCallback((options?: ScreenShareOption & {}) => {
     if (!ScreenshareRef.current) {
       console.error("Screenshare component not available");
       return;
     }
     ScreenshareRef.current.requestShare(options);
   }, []);
+
 
   return {
     ScreenshareRef,
