@@ -4,24 +4,50 @@ import type { VideoPlayer } from "@zoom/videosdk";
 import { ScreenSharePlayerContext } from "../ScreenShareContainerComponent/ScreenShareContainerComponent";
 import type { VideoClient } from "../../test-types";
 
-const attachVideo = async (container: HTMLDivElement, videoSelector: string, userId: number, mediaStream: ReturnType<VideoClient["getMediaStream"]>) => {
-  if (!container.querySelector(videoSelector)) {
-    const shareView = await mediaStream.attachShareView(userId).catch((e) => {
-      console.error(
-        `%c[ScreenSharePlayer] Error attaching video for userId: ${userId}`,
-        "color: orange",
-        e
-      );
-      return null;
-    });
-    if (shareView) {
+const attachVideo = async (
+  container: HTMLDivElement,
+  videoSelector: string,
+  userId: number,
+  mediaStream: ReturnType<VideoClient["getMediaStream"]>,
+): Promise<boolean> => {
+
+  if (container.querySelector(videoSelector)) {
+    return false;
+  }
+
+  const shareView = await mediaStream.attachShareView(userId).catch((e) => {
+    console.error(
+      `%c[ScreenSharePlayer] Error attaching video for userId: ${userId}`,
+      "color: orange",
+      e,
+    );
+    return null;
+  });
+
+  if (shareView) {
+    if (!container.querySelector(videoSelector)) {
       (shareView as HTMLElement).setAttribute("data-user-id", String(userId));
       container.appendChild(shareView as VideoPlayer);
+      return true;
+    } else {
+      (shareView as HTMLElement).remove();
+      return false;
     }
   }
+  return false;
 };
 
-const detachVideo = async (container: HTMLDivElement, videoSelector: string, userId: number, mediaStream: ReturnType<VideoClient["getMediaStream"]>) => {
+const detachVideo = async (
+  container: HTMLDivElement,
+  videoSelector: string,
+  userId: number,
+  mediaStream: ReturnType<VideoClient["getMediaStream"]>,
+) => {
+  const existingElement = container.querySelector(videoSelector);
+  if (!existingElement) {
+    return;
+  }
+
   try {
     const element = await mediaStream.detachShareView(userId);
     const toRemove = container.querySelectorAll(videoSelector);
@@ -67,17 +93,23 @@ const detachVideo = async (container: HTMLDivElement, videoSelector: string, use
  */
 
 const ScreenSharePlayerComponent = ({ userId }: { userId: number }) => {
+  const isMountedRef = React.useRef(true);
   // For React 18 compat
   // eslint-disable-next-line react-x/no-use-context
   const screenshareContainerRef = React.useContext(ScreenSharePlayerContext);
-  const screenshareMutexRef = React.useRef(false);
+
+  React.useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   React.useEffect(() => {
     if (!screenshareContainerRef) {
       console.error("Please wrap the ScreenSharePlayerComponent in a ScreenShareContainer");
       return;
     }
-
     const client = ZoomVideo.createClient();
     const mediaStream = client.getMediaStream();
     if (!screenshareContainerRef.current) {
@@ -87,26 +119,21 @@ const ScreenSharePlayerComponent = ({ userId }: { userId: number }) => {
     const container = screenshareContainerRef.current;
     const videoSelector = `[data-user-id='${userId}']`;
 
-    if (screenshareMutexRef.current) {
-      return;
-    }
-    screenshareMutexRef.current = true;
-    if (client.getAllUser().find(u => u.userId === userId)?.sharerOn) {
-      void attachVideo(container, videoSelector, userId, mediaStream)
-        .then(() => {
-          screenshareMutexRef.current = false;
-        });
+    const user = client.getAllUser().find((u) => u.userId === userId);
+    if (user?.sharerOn) {
+      void attachVideo(container, videoSelector, userId, mediaStream);
     } else {
-      void detachVideo(container, videoSelector, userId, mediaStream)
-        .then(() => {
-          screenshareMutexRef.current = false;
-        });
+      void detachVideo(container, videoSelector, userId, mediaStream);
     }
+
     return () => {
-      void detachVideo(container, videoSelector, userId, mediaStream)
-        .then(() => {
-          screenshareMutexRef.current = false;
-        });
+      // Only detach on true unmount, not React Strict Mode's simulated unmount
+      // We defer cleanup slightly to allow React Strict Mode's second mount to run first
+      setTimeout(() => {
+        if (!isMountedRef.current) {
+          void detachVideo(container, videoSelector, userId, mediaStream);
+        }
+      }, 0);
     };
   }, [screenshareContainerRef, userId]);
 

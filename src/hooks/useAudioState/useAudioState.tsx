@@ -1,5 +1,9 @@
 import React from "react";
-import ZoomVideo, { AudioChangeAction, type event_current_audio_change, type AudioOption } from "@zoom/videosdk";
+import ZoomVideo, {
+  AudioChangeAction,
+  type event_current_audio_change,
+  type AudioOption,
+} from "@zoom/videosdk";
 
 /**
  * Hook to access and manage audio state
@@ -68,14 +72,24 @@ const useAudioState = () => {
 
   /**
    * Set audio mute state
+   * Note: Audio must be capturing before it can be muted/unmuted
    * @param mute - Whether to mute the audio
    */
   const setMute = async (mute: boolean) => {
     const mediaStream = client.getMediaStream();
+
+    // Can only mute/unmute if audio is being captured
+    if (!isCapturingAudio) {
+      console.warn("Audio must be capturing before it can be muted/unmuted");
+      return;
+    }
+
     if (mute) {
       await mediaStream.muteAudio();
+      setIsAudioMuted(true);
     } else {
       await mediaStream.unmuteAudio();
+      setIsAudioMuted(false);
     }
   };
 
@@ -95,13 +109,24 @@ const useAudioState = () => {
 
   /**
    * Toggle audio mute state
+   * Note: Audio must be capturing before it can be muted/unmuted
    */
   const toggleMute = async () => {
     const mediaStream = client.getMediaStream();
-    if (isAudioMuted) {
+
+    // Can only mute/unmute if audio is being captured
+    if (!isCapturingAudio) {
+      console.warn("Audio must be capturing before it can be muted/unmuted");
+      return;
+    }
+
+    const currentlyMuted = mediaStream.isAudioMuted();
+    if (currentlyMuted) {
       await mediaStream.unmuteAudio();
+      setIsAudioMuted(false);
     } else {
       await mediaStream.muteAudio();
+      setIsAudioMuted(true);
     }
   };
 

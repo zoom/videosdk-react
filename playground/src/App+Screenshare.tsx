@@ -28,15 +28,15 @@ export default function Videochat() {
         await mediaStream.setSharePrivilege(SharePrivilege.MultipleShare);
         startScreenshare({ simultaneousShareView: true })
       }} type="button" className="w-64 self-center mt-2">start screenshare</button>
-      <div className="flex w-full flex-1 flex-col" style={isInSession ? {} : { display: "none" }}>
+      <div className="flex w-full flex-1 flex-col" style={isInSession ? {} : { display: "none" }} key={session}>
         <VideoPlayerContainerComponent>
           {users.map((user) => (
-            <VideoPlayerComponent key={user.userId} user={user} />
+            <VideoPlayerComponent key={`${session}-${user.userId}`} user={user} />
           ))}
         </VideoPlayerContainerComponent>
         <ScreenShareContainerComponent>
           {screenshareusers.map((userId) => (
-            <ScreenSharePlayerComponent key={userId} userId={userId} />
+            <ScreenSharePlayerComponent key={`${session}-${userId}`} userId={userId} />
           ))}
         </ScreenShareContainerComponent>
         <LocalScreenShareComponent ref={ScreenshareRef} />

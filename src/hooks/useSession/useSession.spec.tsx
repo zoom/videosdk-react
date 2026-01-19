@@ -231,7 +231,9 @@ describe("useSession", () => {
   it("should register connection-change event listener", async () => {
     renderHook(() => useSession("topic", "token", "username"));
 
-    expect(mockClient.on).toHaveBeenCalledWith("connection-change", expect.any(Function));
+    await waitFor(() => {
+      expect(mockClient.on).toHaveBeenCalledWith("connection-change", expect.any(Function));
+    });
   });
 
   it("should unregister connection-change event listener on unmount", async () => {

@@ -10,7 +10,7 @@ React SDK that provides custom hooks and components for integrating Zoom Video S
 ## Features
 
 - **Session Management**: Easy-to-use hooks for joining and managing Zoom video sessions
-- **Participant Handling**: Automatic participant state management and updates
+- **Participant Handling**: Automatic participant state management and updates with reference stability
 - **Media Controls**: Simple hooks for audio/video state management
 - **Video Rendering**: React components for rendering participant video streams
 - **Screen Sharing**: Built-in screen sharing functionality with local and remote support
@@ -32,7 +32,7 @@ npm install @zoom/videosdk-react
 
 ```
 src/
-├── components/           # React components
+├── components/          # React components
 │   ├── index.ts         # Component exports
 │   └── ...              # Individual component directories
 ├── hooks/               # Custom React hooks
@@ -277,3 +277,4 @@ cp example.env .env
 npm run dev
 ```
 
+Use of this project is subject to our [Terms of Use](https://www.zoom.com/en/trust/video-sdk-terms/).

@@ -135,7 +135,24 @@ describe("useAudioState", () => {
   });
 
   it("should call muteAudio when setMute is called with true", async () => {
+    let audioChangeHandler: typeof CurrentAudioChangeFn | undefined;
+
+    mockClient.on.mockImplementation((event: string, callback: (payload: any) => void) => {
+      if (event === "current-audio-change") {
+        audioChangeHandler = callback;
+      }
+    });
+
     const { result } = renderHook(() => useAudioState());
+
+    // Must be capturing audio before mute/unmute works
+    act(() => {
+      audioChangeHandler?.({ action: AudioChangeAction.Join, type: "computer" });
+    });
+
+    await waitFor(() => {
+      expect(result.current.isCapturingAudio).toEqual(true);
+    });
 
     await result.current.setMute(true);
 
@@ -143,7 +160,24 @@ describe("useAudioState", () => {
   });
 
   it("should call unmuteAudio when setMute is called with false", async () => {
+    let audioChangeHandler: typeof CurrentAudioChangeFn | undefined;
+
+    mockClient.on.mockImplementation((event: string, callback: (payload: any) => void) => {
+      if (event === "current-audio-change") {
+        audioChangeHandler = callback;
+      }
+    });
+
     const { result } = renderHook(() => useAudioState());
+
+    // Must be capturing audio before mute/unmute works
+    act(() => {
+      audioChangeHandler?.({ action: AudioChangeAction.Join, type: "computer" });
+    });
+
+    await waitFor(() => {
+      expect(result.current.isCapturingAudio).toEqual(true);
+    });
 
     await result.current.setMute(false);
 
@@ -168,9 +202,26 @@ describe("useAudioState", () => {
   });
 
   it("should call muteAudio when toggleMute is called and we are currently unmuted", async () => {
+    let audioChangeHandler: typeof CurrentAudioChangeFn | undefined;
+
+    mockClient.on.mockImplementation((event: string, callback: (payload: any) => void) => {
+      if (event === "current-audio-change") {
+        audioChangeHandler = callback;
+      }
+    });
+
     mockMediaStream.isAudioMuted.mockReturnValue(false);
 
     const { result } = renderHook(() => useAudioState());
+
+    // Must be capturing audio before mute/unmute works
+    act(() => {
+      audioChangeHandler?.({ action: AudioChangeAction.Join, type: "computer" });
+    });
+
+    await waitFor(() => {
+      expect(result.current.isCapturingAudio).toEqual(true);
+    });
 
     await result.current.toggleMute();
 
@@ -178,9 +229,26 @@ describe("useAudioState", () => {
   });
 
   it("should call unmuteAudio when toggleMute is called and we are currently muted", async () => {
+    let audioChangeHandler: typeof CurrentAudioChangeFn | undefined;
+
+    mockClient.on.mockImplementation((event: string, callback: (payload: any) => void) => {
+      if (event === "current-audio-change") {
+        audioChangeHandler = callback;
+      }
+    });
+
     mockMediaStream.isAudioMuted.mockReturnValue(true);
 
     const { result } = renderHook(() => useAudioState());
+
+    // Must be capturing audio before mute/unmute works
+    act(() => {
+      audioChangeHandler?.({ action: AudioChangeAction.Join, type: "computer" });
+    });
+
+    await waitFor(() => {
+      expect(result.current.isCapturingAudio).toEqual(true);
+    });
 
     await result.current.toggleMute();
 
