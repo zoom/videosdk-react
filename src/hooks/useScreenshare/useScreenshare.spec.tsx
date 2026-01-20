@@ -16,7 +16,10 @@ describe("useScreenshare", () => {
     const mockRequestShare = vi.fn();
     const { result } = renderHook(() => useScreenshare());
 
-    result.current.ScreenshareRef.current = { requestShare: mockRequestShare };
+    result.current.ScreenshareRef.current = {
+      requestShare: mockRequestShare,
+      setOnStateChange: vi.fn(),
+    };
     result.current.startScreenshare();
 
     expect(mockRequestShare).toHaveBeenCalledWith(undefined);
@@ -27,7 +30,10 @@ describe("useScreenshare", () => {
     const shareOptions: ScreenShareOption = { broadcastToSubsession: true };
     const { result } = renderHook(() => useScreenshare());
 
-    result.current.ScreenshareRef.current = { requestShare: mockRequestShare };
+    result.current.ScreenshareRef.current = {
+      requestShare: mockRequestShare,
+      setOnStateChange: vi.fn(),
+    };
     result.current.startScreenshare(shareOptions);
 
     expect(mockRequestShare).toHaveBeenCalledWith(shareOptions);

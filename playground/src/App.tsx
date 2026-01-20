@@ -1,6 +1,6 @@
 import { generateSignature } from "./JWT";
-import { VideoPlayerComponent, useSession, useSessionUsers, useVideoState, useAudioState, VideoPlayerContainerComponent, useScreenshare, useScreenShareUsers, LocalScreenShareComponent, useMyself, ScreenShareContainerComponent, ScreenSharePlayerComponent } from "../../src";
-import React, { useMemo } from "react";
+import { VideoPlayerComponent, useSession, useSessionUsers, useVideoState, useAudioState, VideoPlayerContainerComponent } from "../../src";
+import React from "react";
 
 const session = "TestOne";
 const jwt = generateSignature(session, 1);
