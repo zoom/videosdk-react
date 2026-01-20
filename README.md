@@ -20,7 +20,7 @@ React SDK that provides custom hooks and components for integrating Zoom Video S
 
 ```bash
 npm install @zoom/videosdk
-npm install @zoom/videosdk-react
+npm install https://github.com/zoom/videosdk-react/releases/download/v0.0.1/zoom-videosdk-react-0.0.1.tgz
 ```
 
 ## Prerequisites
