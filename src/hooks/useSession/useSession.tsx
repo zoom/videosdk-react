@@ -5,6 +5,7 @@ import ZoomVideo, {
   type ConnectionChangePayload,
   type AudioOption,
   type CaptureVideoOption,
+  type ExecutedFailure,
 } from "@zoom/videosdk";
 import { useDeepCompareEffect } from "../../utils";
 
@@ -84,13 +85,13 @@ const useSession = (
   userName: string,
   sessionPassword?: string,
   sessionIdleTimeoutMins?: number,
-  sessionOptions?: SessionOptions
+  sessionOptions?: SessionOptions,
 ) => {
   const client = ZoomVideo.createClient();
   const [isLoading, setIsLoading] = React.useState(false);
   const [isInSession, setInSession] = React.useState(false);
   const [isError, setIsError] = React.useState<boolean>(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<ExecutedFailure | null>(null);
 
   if (!topic || !token || !userName) {
     throw new Error("Missing required parameters: topic, token, userName");
@@ -146,10 +147,14 @@ const useSession = (
           await mediaStream.startVideo(videoOptions);
         }
         setInSession(true);
-      } catch (e) {
+      } catch (e: unknown) {
         setIsError(true);
         console.error("Error in session join: ", e);
-        setError(e instanceof Error ? e.message : String(e));
+        if (e && typeof e === "object" && "reason" in e) {
+          setError(e as ExecutedFailure);
+        } else {
+          setError({ type: "INTERNAL_ERROR", reason: String(e), errorCode: -1 });
+        }
       }
       setIsLoading(false);
     };

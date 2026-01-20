@@ -1,13 +1,29 @@
 import { useMemo, useState } from "react";
 import { generateSignature } from "./JWT";
-import { VideoPlayerComponent, useSession, useSessionUsers, useVideoState, useAudioState, VideoPlayerContainerComponent, useScreenshare, useScreenShareUsers, LocalScreenShareComponent, useMyself, ScreenShareContainerComponent, ScreenSharePlayerComponent } from "../../src";
+import {
+  VideoPlayerComponent,
+  useSession,
+  useSessionUsers,
+  useVideoState,
+  useAudioState,
+  VideoPlayerContainerComponent,
+  useScreenshare,
+  useScreenShareUsers,
+  LocalScreenShareComponent,
+  useMyself,
+  ScreenShareContainerComponent,
+  ScreenSharePlayerComponent,
+} from "../../src";
 import React from "react";
 import ZoomVideo, { SharePrivilege } from "@zoom/videosdk";
 
 export default function Videochat() {
   const [session, setSession] = useState("2");
   const jwt = useMemo(() => generateSignature(session, 1), [session]);
-  const { isInSession, error, isLoading } = useSession(session, jwt, userName, undefined, 40, { initOptions: { webEndpoint: "" }, videoOptions: { virtualBackground: { imageUrl: "blur" } } });
+  const { isInSession, error, isLoading } = useSession(session, jwt, userName, undefined, 40, {
+    initOptions: { webEndpoint: "" },
+    videoOptions: { virtualBackground: { imageUrl: "blur" } },
+  });
   const { isVideoOn, toggleVideo } = useVideoState();
   const { isAudioMuted, toggleMute } = useAudioState();
   const users = useSessionUsers();
@@ -17,18 +33,36 @@ export default function Videochat() {
   return (
     <div className="flex h-full w-full flex-1 flex-col">
       <h1 className="text-center text-3xl font-bold mb-4 mt-0">
-        {isLoading && "loading"} {session} {isInSession && "joined"} {error && JSON.stringify(error)}
+        {isLoading && "loading"} {session} {isInSession && "joined"}{" "}
+        {error && JSON.stringify(error)}
       </h1>
-      <button type="button" onClick={() => { setSession((parseInt(session) + 1).toString()) }} disabled={isLoading} className="w-64 self-center">
+      <button
+        type="button"
+        onClick={() => {
+          setSession((parseInt(session) + 1).toString());
+        }}
+        disabled={isLoading}
+        className="w-64 self-center"
+      >
         Next session
       </button>
-      <button onClick={async () => {
-        const client = ZoomVideo.createClient();
-        const mediaStream = client.getMediaStream();
-        await mediaStream.setSharePrivilege(SharePrivilege.MultipleShare);
-        startScreenshare({ simultaneousShareView: true })
-      }} type="button" className="w-64 self-center mt-2">start screenshare</button>
-      <div className="flex w-full flex-1 flex-col" style={isInSession ? {} : { display: "none" }} key={session}>
+      <button
+        onClick={async () => {
+          const client = ZoomVideo.createClient();
+          const mediaStream = client.getMediaStream();
+          await mediaStream.setSharePrivilege(SharePrivilege.MultipleShare);
+          startScreenshare({ simultaneousShareView: true });
+        }}
+        type="button"
+        className="w-64 self-center mt-2"
+      >
+        start screenshare
+      </button>
+      <div
+        className="flex w-full flex-1 flex-col"
+        style={isInSession ? {} : { display: "none" }}
+        key={session}
+      >
         <VideoPlayerContainerComponent>
           {users.map((user) => (
             <VideoPlayerComponent key={`${session}-${user.userId}`} user={user} />
@@ -42,7 +76,9 @@ export default function Videochat() {
         <LocalScreenShareComponent ref={ScreenshareRef} />
       </div>
       {!isInSession ? (
-        <div className="self-center text-xl text-center">{isLoading ? "loading..." : "session ended"}</div>
+        <div className="self-center text-xl text-center">
+          {isLoading ? "loading..." : "session ended"}
+        </div>
       ) : (
         <div className="flex w-full flex-col justify-around self-center">
           <div className="mt-4 flex w-[30rem] flex-1 justify-around self-center rounded-md bg-white p-4">
@@ -57,6 +93,6 @@ export default function Videochat() {
       )}
     </div>
   );
-};
+}
 
 const userName = "ekaansh";

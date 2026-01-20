@@ -125,7 +125,7 @@ describe("LocalScreenShareComponent", () => {
     await waitFor(() => {
       expect(mockMediaStream.startShareScreen).toHaveBeenCalledWith(
         expect.any(HTMLCanvasElement),
-        shareOptions
+        shareOptions,
       );
     });
   });

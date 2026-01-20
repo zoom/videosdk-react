@@ -10,7 +10,7 @@ const attachVideo = async (
   videoSelector: string,
   userId: number,
   mediaStream: ReturnType<VideoClient["getMediaStream"]>,
-  quality: VideoQuality
+  quality: VideoQuality,
 ): Promise<boolean> => {
   // Check if video element already exists - prevents duplicate attachments
   if (container.querySelector(videoSelector)) {
@@ -21,7 +21,7 @@ const attachVideo = async (
     console.error(
       `%c[VideoPlayer] Error attaching video for userId: ${userId}`,
       "color: orange",
-      e
+      e,
     );
     return null;
   });
@@ -45,7 +45,7 @@ const detachVideo = async (
   container: HTMLDivElement,
   videoSelector: string,
   userId: number,
-  mediaStream: ReturnType<VideoClient["getMediaStream"]>
+  mediaStream: ReturnType<VideoClient["getMediaStream"]>,
 ) => {
   // Only detach if element actually exists
   const existingElement = container.querySelector(videoSelector);
@@ -58,7 +58,7 @@ const detachVideo = async (
       console.warn(
         `%c[VideoPlayer] Error detaching video for userId: ${userId}`,
         "color: orange",
-        e
+        e,
       );
       return null;
     });
@@ -77,7 +77,6 @@ const detachVideo = async (
     console.warn("No video element found for userId: ", userId, err);
   }
 };
-
 
 /**
  * Props for VideoPlayerComponent
@@ -139,15 +138,19 @@ const VideoPlayerComponent = ({ user, quality = VideoQuality.Video_360P }: Video
       console.error("Please wrap the VideoPlayerComponent in a VideoPlayerContainer");
       return;
     }
-    const mediaStream = client.getMediaStream();
     if (!videoContainerRef.current) {
       return;
     }
+    // Don't proceed if not in a session
+    if (!client.getSessionInfo().isInMeeting) {
+      return;
+    }
+
+    const mediaStream = client.getMediaStream();
     const container = videoContainerRef.current;
     const videoSelector = `[data-user-id='${user.userId}']`;
 
     if (user.bVideoOn) {
-      // attachVideo already checks if element exists, so no mutex needed
       void attachVideo(container, videoSelector, user.userId, mediaStream, quality);
     } else {
       void detachVideo(container, videoSelector, user.userId, mediaStream);
@@ -155,10 +158,14 @@ const VideoPlayerComponent = ({ user, quality = VideoQuality.Video_360P }: Video
 
     return () => {
       // Only detach on true unmount, not React Strict Mode's simulated unmount
-      // We defer cleanup slightly to allow React Strict Mode's second mount to run first
       setTimeout(() => {
         if (!isMountedRef.current) {
-          void detachVideo(container, videoSelector, user.userId, mediaStream);
+          if (client.getSessionInfo().isInMeeting) {
+            void detachVideo(container, videoSelector, user.userId, mediaStream);
+          } else {
+            // Session ended - remove DOM elements directly
+            container.querySelectorAll(videoSelector).forEach((el) => el.remove());
+          }
         }
       }, 0);
     };

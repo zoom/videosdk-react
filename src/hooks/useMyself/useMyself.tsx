@@ -24,10 +24,9 @@ const useMyself = () => {
 
   useEffect(() => {
     const client = ZoomVideo.createClient();
-    const localUser = users.find(user => user.userId === client.getSessionInfo().userId);
-    if (localUser)
-      setMyself(localUser);
-  }, [users])
+    const localUser = users.find((user) => user.userId === client.getSessionInfo().userId);
+    if (localUser) setMyself(localUser);
+  }, [users]);
 
   return myself;
 };

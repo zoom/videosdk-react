@@ -1,7 +1,9 @@
 import { render } from "@testing-library/react";
 import React, { useContext, type RefObject } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import ScreenShareContainerComponent, { ScreenSharePlayerContext } from "./ScreenShareContainerComponent";
+import ScreenShareContainerComponent, {
+  ScreenSharePlayerContext,
+} from "./ScreenShareContainerComponent";
 
 describe("VideoPlayerContainerComponent", () => {
   afterEach(() => {
@@ -12,7 +14,7 @@ describe("VideoPlayerContainerComponent", () => {
     const { container } = render(
       <ScreenShareContainerComponent>
         <div />
-      </ScreenShareContainerComponent>
+      </ScreenShareContainerComponent>,
     );
 
     expect(container.querySelector("video-player-container")).toBeInTheDocument();
@@ -22,7 +24,7 @@ describe("VideoPlayerContainerComponent", () => {
     const { getByTestId } = render(
       <ScreenShareContainerComponent>
         <div data-testid="child-element">Test Child</div>
-      </ScreenShareContainerComponent>
+      </ScreenShareContainerComponent>,
     );
 
     expect(getByTestId("child-element")).toBeInTheDocument();
@@ -39,12 +41,12 @@ describe("VideoPlayerContainerComponent", () => {
     render(
       <ScreenShareContainerComponent>
         <ChildComponent />
-      </ScreenShareContainerComponent>
+      </ScreenShareContainerComponent>,
     );
 
     expect(context).not.toBeNull();
     expect((context as unknown as RefObject<HTMLDivElement | null>)?.current).toBeInstanceOf(
-      HTMLElement
+      HTMLElement,
     );
   });
 
@@ -59,13 +61,13 @@ describe("VideoPlayerContainerComponent", () => {
     const { container } = render(
       <ScreenShareContainerComponent>
         <ChildComponent />
-      </ScreenShareContainerComponent>
+      </ScreenShareContainerComponent>,
     );
 
     const videoPlayerContainer = container.querySelector("video-player-container");
 
     expect((context as unknown as RefObject<HTMLDivElement | null>)?.current).toEqual(
-      videoPlayerContainer
+      videoPlayerContainer,
     );
   });
 
@@ -76,7 +78,7 @@ describe("VideoPlayerContainerComponent", () => {
         style={{ height: "400px", width: "100%" }}
       >
         <div />
-      </ScreenShareContainerComponent>
+      </ScreenShareContainerComponent>,
     );
 
     const videoPlayerContainer = container.querySelector("video-player-container");

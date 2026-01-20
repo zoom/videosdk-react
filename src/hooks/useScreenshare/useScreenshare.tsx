@@ -39,7 +39,6 @@ const useScreenshare = () => {
     ScreenshareRef.current.requestShare(options);
   }, []);
 
-
   return {
     ScreenshareRef,
     startScreenshare,

@@ -1,19 +1,13 @@
 {
-    "$schema": "https://typedoc.org/schema.json",
-    "entryPoints": [
-        "src/components/index.ts",
-        "src/hooks/index.ts"
-    ],
-    "entryPointStrategy": "expand",
-    "out": "docs",
-    "tsconfig": "tsconfig.json",
-    "name": "Zoom Video SDK for React",
-    "includeVersion": true,
-    "excludeExternals": false,
-    "excludeInternal": true,
-    "plugin": [
-        "typedoc-plugin-mdn-links",
-        "typedoc-plugin-missing-exports"
-    ],
-    "hideGenerator": true
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/components/index.ts", "src/hooks/index.ts"],
+  "entryPointStrategy": "expand",
+  "out": "docs",
+  "tsconfig": "tsconfig.json",
+  "name": "Zoom Video SDK for React",
+  "includeVersion": true,
+  "excludeExternals": false,
+  "excludeInternal": true,
+  "plugin": ["typedoc-plugin-mdn-links", "typedoc-plugin-missing-exports"],
+  "hideGenerator": true
 }

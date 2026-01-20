@@ -53,7 +53,7 @@ function dequal(foo: any, bar: any) {
       }
       for (len of foo) {
         tmp = len;
-        if (tmp && typeof tmp === 'object') {
+        if (tmp && typeof tmp === "object") {
           tmp = find(bar, tmp);
           if (!tmp) return false;
         }
@@ -68,7 +68,7 @@ function dequal(foo: any, bar: any) {
       }
       for (len of foo) {
         tmp = len[0];
-        if (tmp && typeof tmp === 'object') {
+        if (tmp && typeof tmp === "object") {
           tmp = find(bar, tmp);
           if (!tmp) return false;
         }
@@ -97,7 +97,7 @@ function dequal(foo: any, bar: any) {
       return len === -1;
     }
 
-    if (!ctor || typeof foo === 'object') {
+    if (!ctor || typeof foo === "object") {
       len = 0;
       for (ctor in foo) {
         if (has.call(foo, ctor) && ++len && !has.call(bar, ctor)) return false;

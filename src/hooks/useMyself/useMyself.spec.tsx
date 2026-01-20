@@ -15,7 +15,6 @@ vi.mock("../useSessionUsers/useSessionUsers", () => ({
   default: mockUseSessionUsers,
 }));
 
-
 describe("useMyself", () => {
   let mockClient: any;
 
@@ -42,7 +41,11 @@ describe("useMyself", () => {
   });
 
   it("should return the local participant when present", async () => {
-    const localParticipant: Participant = { userId: 2, displayName: "Local", bVideoOn: true } as Participant;
+    const localParticipant: Participant = {
+      userId: 2,
+      displayName: "Local",
+      bVideoOn: true,
+    } as Participant;
 
     mockUseSessionUsers.mockReturnValue([localParticipant]);
 
@@ -54,14 +57,22 @@ describe("useMyself", () => {
   });
 
   it("should return the local participant when the users list changes", async () => {
-    const localParticipant: Participant = { userId: 2, displayName: "Local", bVideoOn: true } as Participant;
+    const localParticipant: Participant = {
+      userId: 2,
+      displayName: "Local",
+      bVideoOn: true,
+    } as Participant;
     mockUseSessionUsers.mockReturnValue([localParticipant]);
     const callOne = renderHook(() => useMyself());
     await waitFor(() => {
       expect(callOne.result.current).toEqual(localParticipant);
     });
 
-    const remoteParticipant: Participant = { userId: 3, displayName: "Remote", bVideoOn: false } as Participant;
+    const remoteParticipant: Participant = {
+      userId: 3,
+      displayName: "Remote",
+      bVideoOn: false,
+    } as Participant;
     mockUseSessionUsers.mockReturnValue([localParticipant, remoteParticipant]);
     const callTwo = renderHook(() => useMyself());
     await waitFor(() => {
@@ -69,5 +80,3 @@ describe("useMyself", () => {
     });
   });
 });
-
-

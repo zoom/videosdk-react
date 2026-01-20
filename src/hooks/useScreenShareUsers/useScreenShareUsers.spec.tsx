@@ -12,7 +12,9 @@ vi.mock("@zoom/videosdk", () => ({
 
 describe("useScreenShareUsers", () => {
   let mockClient: Mocked<VideoClient>;
-  let shareStateChangeHandler: ((e: Parameters<typeof event_peer_share_state_change>[0]) => void) | undefined;
+  let shareStateChangeHandler:
+    | ((e: Parameters<typeof event_peer_share_state_change>[0]) => void)
+    | undefined;
 
   beforeEach(() => {
     mockClient = {
@@ -56,7 +58,9 @@ describe("useScreenShareUsers", () => {
     const { result } = renderHook(() => useScreenShareUsers());
 
     act(() => {
-      shareStateChangeHandler?.({ action: "Start", userId: 1 } as Parameters<typeof event_peer_share_state_change>[0]);
+      shareStateChangeHandler?.({ action: "Start", userId: 1 } as Parameters<
+        typeof event_peer_share_state_change
+      >[0]);
     });
 
     await waitFor(() => {
@@ -69,7 +73,9 @@ describe("useScreenShareUsers", () => {
 
     // First add a user
     act(() => {
-      shareStateChangeHandler?.({ action: "Start", userId: 1 } as Parameters<typeof event_peer_share_state_change>[0]);
+      shareStateChangeHandler?.({ action: "Start", userId: 1 } as Parameters<
+        typeof event_peer_share_state_change
+      >[0]);
     });
 
     await waitFor(() => {
@@ -78,7 +84,9 @@ describe("useScreenShareUsers", () => {
 
     // Then remove the user
     act(() => {
-      shareStateChangeHandler?.({ action: "Stop", userId: 1 } as Parameters<typeof event_peer_share_state_change>[0]);
+      shareStateChangeHandler?.({ action: "Stop", userId: 1 } as Parameters<
+        typeof event_peer_share_state_change
+      >[0]);
     });
 
     await waitFor(() => {
@@ -90,11 +98,15 @@ describe("useScreenShareUsers", () => {
     const { result } = renderHook(() => useScreenShareUsers());
 
     act(() => {
-      shareStateChangeHandler?.({ action: "Start", userId: 1 } as Parameters<typeof event_peer_share_state_change>[0]);
+      shareStateChangeHandler?.({ action: "Start", userId: 1 } as Parameters<
+        typeof event_peer_share_state_change
+      >[0]);
     });
 
     act(() => {
-      shareStateChangeHandler?.({ action: "Start", userId: 2 } as Parameters<typeof event_peer_share_state_change>[0]);
+      shareStateChangeHandler?.({ action: "Start", userId: 2 } as Parameters<
+        typeof event_peer_share_state_change
+      >[0]);
     });
 
     await waitFor(() => {
@@ -107,15 +119,21 @@ describe("useScreenShareUsers", () => {
 
     // Add multiple users
     act(() => {
-      shareStateChangeHandler?.({ action: "Start", userId: 1 } as Parameters<typeof event_peer_share_state_change>[0]);
+      shareStateChangeHandler?.({ action: "Start", userId: 1 } as Parameters<
+        typeof event_peer_share_state_change
+      >[0]);
     });
 
     act(() => {
-      shareStateChangeHandler?.({ action: "Start", userId: 2 } as Parameters<typeof event_peer_share_state_change>[0]);
+      shareStateChangeHandler?.({ action: "Start", userId: 2 } as Parameters<
+        typeof event_peer_share_state_change
+      >[0]);
     });
 
     act(() => {
-      shareStateChangeHandler?.({ action: "Start", userId: 3 } as Parameters<typeof event_peer_share_state_change>[0]);
+      shareStateChangeHandler?.({ action: "Start", userId: 3 } as Parameters<
+        typeof event_peer_share_state_change
+      >[0]);
     });
 
     await waitFor(() => {
@@ -124,7 +142,9 @@ describe("useScreenShareUsers", () => {
 
     // Remove only user 2
     act(() => {
-      shareStateChangeHandler?.({ action: "Stop", userId: 2 } as Parameters<typeof event_peer_share_state_change>[0]);
+      shareStateChangeHandler?.({ action: "Stop", userId: 2 } as Parameters<
+        typeof event_peer_share_state_change
+      >[0]);
     });
 
     await waitFor(() => {
@@ -136,7 +156,9 @@ describe("useScreenShareUsers", () => {
     const { result } = renderHook(() => useScreenShareUsers());
 
     act(() => {
-      shareStateChangeHandler?.({ action: "Start", userId: 1 } as Parameters<typeof event_peer_share_state_change>[0]);
+      shareStateChangeHandler?.({ action: "Start", userId: 1 } as Parameters<
+        typeof event_peer_share_state_change
+      >[0]);
     });
 
     await waitFor(() => {
@@ -144,7 +166,9 @@ describe("useScreenShareUsers", () => {
     });
 
     act(() => {
-      shareStateChangeHandler?.({ action: "Stop", userId: 1 } as Parameters<typeof event_peer_share_state_change>[0]);
+      shareStateChangeHandler?.({ action: "Stop", userId: 1 } as Parameters<
+        typeof event_peer_share_state_change
+      >[0]);
     });
 
     await waitFor(() => {
@@ -152,7 +176,9 @@ describe("useScreenShareUsers", () => {
     });
 
     act(() => {
-      shareStateChangeHandler?.({ action: "Start", userId: 1 } as Parameters<typeof event_peer_share_state_change>[0]);
+      shareStateChangeHandler?.({ action: "Start", userId: 1 } as Parameters<
+        typeof event_peer_share_state_change
+      >[0]);
     });
 
     await waitFor(() => {

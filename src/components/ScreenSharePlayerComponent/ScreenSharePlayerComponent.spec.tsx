@@ -58,12 +58,12 @@ describe("ScreenSharePlayerComponent", () => {
   });
 
   it("should console error when ScreenSharePlayerContext is not provided", () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     render(<ScreenSharePlayerComponent userId={userId} />);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      "Please wrap the ScreenSharePlayerComponent in a ScreenShareContainer"
+      "Please wrap the ScreenSharePlayerComponent in a ScreenShareContainer",
     );
 
     consoleSpy.mockRestore();
@@ -75,7 +75,7 @@ describe("ScreenSharePlayerComponent", () => {
     render(
       <ScreenSharePlayerContext.Provider value={nullRef}>
         <ScreenSharePlayerComponent userId={userId} />
-      </ScreenSharePlayerContext.Provider>
+      </ScreenSharePlayerContext.Provider>,
     );
 
     expect(mockMediaStream.attachShareView).not.toHaveBeenCalled();
@@ -85,7 +85,7 @@ describe("ScreenSharePlayerComponent", () => {
     render(
       <ScreenSharePlayerContext.Provider value={mockContainerRef}>
         <ScreenSharePlayerComponent userId={userId} />
-      </ScreenSharePlayerContext.Provider>
+      </ScreenSharePlayerContext.Provider>,
     );
 
     await vi.runAllTimersAsync();
@@ -98,7 +98,7 @@ describe("ScreenSharePlayerComponent", () => {
     render(
       <ScreenSharePlayerContext.Provider value={mockContainerRef}>
         <ScreenSharePlayerComponent userId={userId} />
-      </ScreenSharePlayerContext.Provider>
+      </ScreenSharePlayerContext.Provider>,
     );
 
     await vi.runAllTimersAsync();
@@ -120,7 +120,7 @@ describe("ScreenSharePlayerComponent", () => {
     render(
       <ScreenSharePlayerContext.Provider value={mockContainerRef}>
         <ScreenSharePlayerComponent userId={userId} />
-      </ScreenSharePlayerContext.Provider>
+      </ScreenSharePlayerContext.Provider>,
     );
 
     await vi.waitFor(() => {
@@ -129,7 +129,7 @@ describe("ScreenSharePlayerComponent", () => {
   });
 
   it("should gracefully handle attachShareView errors", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const attachError = new Error("Failed to attach share view.");
 
     mockMediaStream.attachShareView.mockRejectedValue(attachError);
@@ -137,7 +137,7 @@ describe("ScreenSharePlayerComponent", () => {
     render(
       <ScreenSharePlayerContext.Provider value={mockContainerRef}>
         <ScreenSharePlayerComponent userId={userId} />
-      </ScreenSharePlayerContext.Provider>
+      </ScreenSharePlayerContext.Provider>,
     );
 
     await vi.runAllTimersAsync();
@@ -145,7 +145,7 @@ describe("ScreenSharePlayerComponent", () => {
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("[ScreenSharePlayer] Error attaching video for userId: 1234"),
         expect.any(String),
-        attachError
+        attachError,
       );
     });
 
@@ -156,7 +156,7 @@ describe("ScreenSharePlayerComponent", () => {
     const { unmount } = render(
       <ScreenSharePlayerContext.Provider value={mockContainerRef}>
         <ScreenSharePlayerComponent userId={userId} />
-      </ScreenSharePlayerContext.Provider>
+      </ScreenSharePlayerContext.Provider>,
     );
 
     // Let attach complete
@@ -185,7 +185,7 @@ describe("ScreenSharePlayerComponent", () => {
     render(
       <ScreenSharePlayerContext.Provider value={mockContainerRef}>
         <ScreenSharePlayerComponent userId={userId} />
-      </ScreenSharePlayerContext.Provider>
+      </ScreenSharePlayerContext.Provider>,
     );
 
     await vi.waitFor(() => {
@@ -202,7 +202,7 @@ describe("ScreenSharePlayerComponent", () => {
     render(
       <ScreenSharePlayerContext.Provider value={mockContainerRef}>
         <ScreenSharePlayerComponent userId={userId} />
-      </ScreenSharePlayerContext.Provider>
+      </ScreenSharePlayerContext.Provider>,
     );
 
     // Run timers to ensure effect has run
@@ -213,7 +213,7 @@ describe("ScreenSharePlayerComponent", () => {
   });
 
   it("should handle detachShareView errors gracefully", async () => {
-    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     const detachError = new Error("Failed to detach share view.");
 
     mockMediaStream.detachShareView.mockRejectedValue(detachError);
@@ -229,14 +229,14 @@ describe("ScreenSharePlayerComponent", () => {
     render(
       <ScreenSharePlayerContext.Provider value={mockContainerRef}>
         <ScreenSharePlayerComponent userId={userId} />
-      </ScreenSharePlayerContext.Provider>
+      </ScreenSharePlayerContext.Provider>,
     );
 
     await vi.waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith(
         "No video element found for userId: ",
         userId,
-        detachError
+        detachError,
       );
     });
 
@@ -247,7 +247,7 @@ describe("ScreenSharePlayerComponent", () => {
     const { rerender } = render(
       <ScreenSharePlayerContext.Provider value={mockContainerRef}>
         <ScreenSharePlayerComponent userId={userId} />
-      </ScreenSharePlayerContext.Provider>
+      </ScreenSharePlayerContext.Provider>,
     );
 
     // Let attach complete - the share view element will be added to the container
@@ -269,7 +269,7 @@ describe("ScreenSharePlayerComponent", () => {
     rerender(
       <ScreenSharePlayerContext.Provider value={mockContainerRef}>
         <ScreenSharePlayerComponent userId={newUserId} />
-      </ScreenSharePlayerContext.Provider>
+      </ScreenSharePlayerContext.Provider>,
     );
 
     await vi.runAllTimersAsync();
