@@ -2,7 +2,12 @@
     "ignorePatterns": [
         "**/*.spec.ts",
         "**/*.spec.tsx",
-        "playground/"
+        "playground/",
+        "e2e/",
+        "docs/",
+        "dist/",
+        "playwright-report/",
+        "test-results/"
     ],
     "plugins": [
         "react",

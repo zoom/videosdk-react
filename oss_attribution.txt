@@ -1,0 +1,1 @@
+Uses code from https://github.com/kentcdodds/use-deep-compare-effect & https://github.com/lukeed/dequal
