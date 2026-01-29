@@ -1,10 +1,10 @@
-import { defineConfig } from 'tsdown'
+import { defineConfig } from "tsdown";
 
 export default defineConfig([
   {
-    entry: ['./src/index.ts'],
-    platform: 'neutral',
+    entry: ["./src/index.ts"],
+    platform: "neutral",
     dts: true,
-    external: ['@zoom/videosdk', "react", "react-dom"],
+    external: ["@zoom/videosdk", "react", "react-dom"],
   },
-])
+]);

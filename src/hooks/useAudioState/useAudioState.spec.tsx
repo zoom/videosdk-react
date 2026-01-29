@@ -154,7 +154,9 @@ describe("useAudioState", () => {
       expect(result.current.isCapturingAudio).toEqual(true);
     });
 
-    await result.current.setMute(true);
+    await act(async () => {
+      await result.current.setMute(true);
+    });
 
     expect(mockMediaStream.muteAudio).toHaveBeenCalled();
   });
@@ -179,7 +181,9 @@ describe("useAudioState", () => {
       expect(result.current.isCapturingAudio).toEqual(true);
     });
 
-    await result.current.setMute(false);
+    await act(async () => {
+      await result.current.setMute(false);
+    });
 
     expect(mockMediaStream.unmuteAudio).toHaveBeenCalled();
   });
@@ -223,7 +227,9 @@ describe("useAudioState", () => {
       expect(result.current.isCapturingAudio).toEqual(true);
     });
 
-    await result.current.toggleMute();
+    await act(async () => {
+      await result.current.toggleMute();
+    });
 
     expect(mockMediaStream.muteAudio).toHaveBeenCalled();
   });
@@ -250,7 +256,9 @@ describe("useAudioState", () => {
       expect(result.current.isCapturingAudio).toEqual(true);
     });
 
-    await result.current.toggleMute();
+    await act(async () => {
+      await result.current.toggleMute();
+    });
 
     expect(mockMediaStream.unmuteAudio).toHaveBeenCalled();
     expect(mockMediaStream.muteAudio).not.toHaveBeenCalled();

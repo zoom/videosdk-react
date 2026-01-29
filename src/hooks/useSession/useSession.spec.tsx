@@ -66,7 +66,7 @@ describe("useSession", () => {
 
   it("should return initial session state properties", () => {
     const { result } = renderHook(() =>
-      useSession("topic", "token", "username", undefined, undefined, { waitBeforeJoining: true })
+      useSession("topic", "token", "username", undefined, undefined, { waitBeforeJoining: true }),
     );
 
     expect(result.current).toHaveProperty("error");
@@ -81,7 +81,7 @@ describe("useSession", () => {
     };
 
     renderHook(() =>
-      useSession("topic", "token", "username", undefined, undefined, sessionOptions)
+      useSession("topic", "token", "username", undefined, undefined, sessionOptions),
     );
 
     expect(mockClient.init).not.toHaveBeenCalled();
@@ -106,7 +106,7 @@ describe("useSession", () => {
     };
 
     renderHook(() =>
-      useSession("topic", "token", "username", undefined, undefined, sessionOptions)
+      useSession("topic", "token", "username", undefined, undefined, sessionOptions),
     );
 
     await waitFor(() => {
@@ -123,7 +123,7 @@ describe("useSession", () => {
         "myCustomToken",
         "John Doe",
         "password123!",
-        30
+        30,
       );
     });
   });
@@ -143,7 +143,7 @@ describe("useSession", () => {
     };
 
     renderHook(() =>
-      useSession("topic", "token", "username", undefined, undefined, sessionOptions)
+      useSession("topic", "token", "username", undefined, undefined, sessionOptions),
     );
 
     await waitFor(() => {
@@ -158,7 +158,7 @@ describe("useSession", () => {
     };
 
     renderHook(() =>
-      useSession("topic", "token", "username", undefined, undefined, sessionOptions)
+      useSession("topic", "token", "username", undefined, undefined, sessionOptions),
     );
 
     await waitFor(() => {
@@ -174,7 +174,7 @@ describe("useSession", () => {
     };
 
     renderHook(() =>
-      useSession("topic", "token", "username", undefined, undefined, sessionOptions)
+      useSession("topic", "token", "username", undefined, undefined, sessionOptions),
     );
 
     await waitFor(() => {
@@ -196,7 +196,7 @@ describe("useSession", () => {
     };
 
     renderHook(() =>
-      useSession("topic", "token", "username", undefined, undefined, sessionOptions)
+      useSession("topic", "token", "username", undefined, undefined, sessionOptions),
     );
 
     await waitFor(() => {
@@ -214,7 +214,7 @@ describe("useSession", () => {
   });
 
   it("should set isError to true when join fails", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     mockClient.join.mockRejectedValueOnce(new Error("Join failed"));
 
@@ -333,7 +333,7 @@ describe("useSession", () => {
   });
 
   it("should warn when non-host tries to use endSessionOnLeave option", async () => {
-    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     mockClient.isHost.mockReturnValue(false);
 
@@ -342,7 +342,7 @@ describe("useSession", () => {
     };
 
     const { unmount } = renderHook(() =>
-      useSession("topic", "token", "username", undefined, undefined, sessionOptions)
+      useSession("topic", "token", "username", undefined, undefined, sessionOptions),
     );
 
     await waitFor(() => {
@@ -396,7 +396,7 @@ describe("useSession", () => {
   });
 
   it("should handle errors when leaving session", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const leaveError = new Error("Failed to leave session");
 
     mockClient.leave.mockRejectedValue(leaveError);

@@ -10,7 +10,6 @@ const attachVideo = async (
   userId: number,
   mediaStream: ReturnType<VideoClient["getMediaStream"]>,
 ): Promise<boolean> => {
-
   if (container.querySelector(videoSelector)) {
     return false;
   }

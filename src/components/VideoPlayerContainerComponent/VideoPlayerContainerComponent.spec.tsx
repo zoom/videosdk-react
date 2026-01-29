@@ -12,7 +12,7 @@ describe("VideoPlayerContainerComponent", () => {
     const { container } = render(
       <VideoPlayerContainerComponent>
         <div />
-      </VideoPlayerContainerComponent>
+      </VideoPlayerContainerComponent>,
     );
 
     expect(container.querySelector("video-player-container")).toBeInTheDocument();
@@ -22,7 +22,7 @@ describe("VideoPlayerContainerComponent", () => {
     const { getByTestId } = render(
       <VideoPlayerContainerComponent>
         <div data-testid="child-element">Test Child</div>
-      </VideoPlayerContainerComponent>
+      </VideoPlayerContainerComponent>,
     );
 
     expect(getByTestId("child-element")).toBeInTheDocument();
@@ -39,12 +39,12 @@ describe("VideoPlayerContainerComponent", () => {
     render(
       <VideoPlayerContainerComponent>
         <ChildComponent />
-      </VideoPlayerContainerComponent>
+      </VideoPlayerContainerComponent>,
     );
 
     expect(context).not.toBeNull();
     expect((context as unknown as RefObject<HTMLDivElement | null>)?.current).toBeInstanceOf(
-      HTMLElement
+      HTMLElement,
     );
   });
 
@@ -59,13 +59,13 @@ describe("VideoPlayerContainerComponent", () => {
     const { container } = render(
       <VideoPlayerContainerComponent>
         <ChildComponent />
-      </VideoPlayerContainerComponent>
+      </VideoPlayerContainerComponent>,
     );
 
     const videoPlayerContainer = container.querySelector("video-player-container");
 
     expect((context as unknown as RefObject<HTMLDivElement | null>)?.current).toEqual(
-      videoPlayerContainer
+      videoPlayerContainer,
     );
   });
 
@@ -76,7 +76,7 @@ describe("VideoPlayerContainerComponent", () => {
         style={{ height: "400px", width: "100%" }}
       >
         <div />
-      </VideoPlayerContainerComponent>
+      </VideoPlayerContainerComponent>,
     );
 
     const videoPlayerContainer = container.querySelector("video-player-container");

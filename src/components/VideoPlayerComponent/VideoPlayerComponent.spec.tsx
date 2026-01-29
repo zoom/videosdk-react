@@ -42,6 +42,7 @@ describe("VideoPlayerComponent", () => {
 
     mockClient = {
       getMediaStream: vi.fn().mockReturnValue(mockMediaStream),
+      getSessionInfo: vi.fn().mockReturnValue({ isInMeeting: true }),
     } as unknown as Mocked<VideoClient>;
 
     vi.mocked(ZoomVideo.createClient).mockReturnValue(mockClient);
@@ -63,12 +64,12 @@ describe("VideoPlayerComponent", () => {
   });
 
   it("should console error when VideoPlayerContext is not provided", () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     render(<VideoPlayerComponent user={mockParticipant} />);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      "Please wrap the VideoPlayerComponent in a VideoPlayerContainer"
+      "Please wrap the VideoPlayerComponent in a VideoPlayerContainer",
     );
 
     consoleSpy.mockRestore();
@@ -80,7 +81,7 @@ describe("VideoPlayerComponent", () => {
     render(
       <VideoPlayerContext.Provider value={nullRef}>
         <VideoPlayerComponent user={mockParticipant} />
-      </VideoPlayerContext.Provider>
+      </VideoPlayerContext.Provider>,
     );
 
     expect(mockMediaStream.attachVideo).not.toHaveBeenCalled();
@@ -90,7 +91,7 @@ describe("VideoPlayerComponent", () => {
     render(
       <VideoPlayerContext.Provider value={mockContainerRef}>
         <VideoPlayerComponent user={mockParticipant} quality={VideoQuality.Video_720P} />
-      </VideoPlayerContext.Provider>
+      </VideoPlayerContext.Provider>,
     );
 
     await vi.runAllTimersAsync();
@@ -103,7 +104,7 @@ describe("VideoPlayerComponent", () => {
     render(
       <VideoPlayerContext.Provider value={mockContainerRef}>
         <VideoPlayerComponent user={mockParticipant} />
-      </VideoPlayerContext.Provider>
+      </VideoPlayerContext.Provider>,
     );
 
     await vi.runAllTimersAsync();
@@ -116,7 +117,7 @@ describe("VideoPlayerComponent", () => {
     render(
       <VideoPlayerContext.Provider value={mockContainerRef}>
         <VideoPlayerComponent user={mockParticipant} />
-      </VideoPlayerContext.Provider>
+      </VideoPlayerContext.Provider>,
     );
 
     await vi.runAllTimersAsync();
@@ -137,7 +138,7 @@ describe("VideoPlayerComponent", () => {
     render(
       <VideoPlayerContext.Provider value={mockContainerRef}>
         <VideoPlayerComponent user={mockParticipantVideoOff} />
-      </VideoPlayerContext.Provider>
+      </VideoPlayerContext.Provider>,
     );
 
     await vi.waitFor(() => {
@@ -146,7 +147,7 @@ describe("VideoPlayerComponent", () => {
   });
 
   it("should gracefully handle attachVideo errors", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const attachError = new Error("Failed to attach video.");
 
     mockMediaStream.attachVideo.mockRejectedValue(attachError);
@@ -154,7 +155,7 @@ describe("VideoPlayerComponent", () => {
     render(
       <VideoPlayerContext.Provider value={mockContainerRef}>
         <VideoPlayerComponent user={mockParticipant} />
-      </VideoPlayerContext.Provider>
+      </VideoPlayerContext.Provider>,
     );
 
     await vi.runAllTimersAsync();
@@ -162,7 +163,7 @@ describe("VideoPlayerComponent", () => {
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("[VideoPlayer] Error attaching video for userId: 1234"),
         expect.any(String),
-        attachError
+        attachError,
       );
     });
 
@@ -173,7 +174,7 @@ describe("VideoPlayerComponent", () => {
     const { unmount } = render(
       <VideoPlayerContext.Provider value={mockContainerRef}>
         <VideoPlayerComponent user={mockParticipant} />
-      </VideoPlayerContext.Provider>
+      </VideoPlayerContext.Provider>,
     );
 
     // Let attach complete
@@ -195,7 +196,7 @@ describe("VideoPlayerComponent", () => {
     const { rerender } = render(
       <VideoPlayerContext.Provider value={mockContainerRef}>
         <VideoPlayerComponent user={mockParticipant} />
-      </VideoPlayerContext.Provider>
+      </VideoPlayerContext.Provider>,
     );
 
     // Let attach complete - the video element will be added to the container
@@ -211,7 +212,7 @@ describe("VideoPlayerComponent", () => {
     rerender(
       <VideoPlayerContext.Provider value={mockContainerRef}>
         <VideoPlayerComponent user={participantVideoOff} />
-      </VideoPlayerContext.Provider>
+      </VideoPlayerContext.Provider>,
     );
 
     await vi.waitFor(() => {

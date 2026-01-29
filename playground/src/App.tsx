@@ -1,5 +1,12 @@
 import { generateSignature } from "./JWT";
-import { VideoPlayerComponent, useSession, useSessionUsers, useVideoState, useAudioState, VideoPlayerContainerComponent } from "../../src";
+import {
+  VideoPlayerComponent,
+  useSession,
+  useSessionUsers,
+  useVideoState,
+  useAudioState,
+  VideoPlayerContainerComponent,
+} from "../../src";
 import React from "react";
 
 const session = "TestOne";
@@ -13,10 +20,15 @@ export default function Videochat() {
 
   return (
     <div className="flex h-full w-full flex-1 flex-col">
-      <h1 className="text-center text-3xl font-bold mb-4 mt-0">
-        {isLoading && "loading"} {session} {isInSession && "joined"} {error && JSON.stringify(error)}
+      <h1 className="text-center text-3xl font-bold mb-4 mt-0" data-testid="session-status">
+        {isLoading && "loading"} {session} {isInSession && "joined"}{" "}
+        {error && error.reason}
       </h1>
-      <div className="flex w-full flex-1 flex-col" style={isInSession ? {} : { display: "none" }}>
+      <div
+        className="flex w-full flex-1 flex-col"
+        style={isInSession ? {} : { display: "none" }}
+        data-testid="video-container"
+      >
         <VideoPlayerContainerComponent>
           {users.map((user) => (
             <VideoPlayerComponent key={user.userId} user={user} />
@@ -24,14 +36,26 @@ export default function Videochat() {
         </VideoPlayerContainerComponent>
       </div>
       {!isInSession ? (
-        <div className="self-center text-xl text-center">{isLoading ? "loading..." : "session ended"}</div>
+        <div className="self-center text-xl text-center" data-testid="session-ended">
+          {isLoading ? "loading..." : "session ended"}
+        </div>
       ) : (
-        <div className="flex w-full flex-col justify-around self-center">
+        <div className="flex w-full flex-col justify-around self-center" data-testid="controls">
           <div className="mt-4 flex w-[30rem] flex-1 justify-around self-center rounded-md bg-white p-4">
-            <button type="button" onClick={() => void toggleVideo()} title="toggle video">
+            <button
+              type="button"
+              onClick={() => void toggleVideo()}
+              title="toggle video"
+              data-testid="video-toggle"
+            >
               {isVideoOn ? "mute video" : "unmute video"}
             </button>
-            <button type="button" onClick={toggleMute} title="toggle audio">
+            <button
+              type="button"
+              onClick={toggleMute}
+              title="toggle audio"
+              data-testid="audio-toggle"
+            >
               {isAudioMuted ? "unmute audio" : "mute audio"}
             </button>
           </div>
@@ -39,6 +63,6 @@ export default function Videochat() {
       )}
     </div>
   );
-};
+}
 
 const userName = "ekaansh";

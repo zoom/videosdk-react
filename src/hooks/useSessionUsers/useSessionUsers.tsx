@@ -1,5 +1,9 @@
 import React from "react";
-import ZoomVideo, { ConnectionState, type event_connection_change, type Participant } from "@zoom/videosdk";
+import ZoomVideo, {
+  ConnectionState,
+  type event_connection_change,
+  type Participant,
+} from "@zoom/videosdk";
 
 /**
  * Hook to access participants in the current session

@@ -1,11 +1,13 @@
 {
-    "ignorePatterns": [
-        "**/*.spec.ts",
-        "**/*.spec.tsx",
-        "playground/"
-    ],
-    "plugins": [
-        "react",
-        "typescript"
-    ]
+  "ignorePatterns": [
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "playground/",
+    "e2e/",
+    "docs/",
+    "dist/",
+    "playwright-report/",
+    "test-results/"
+  ],
+  "plugins": ["react", "typescript"]
 }
