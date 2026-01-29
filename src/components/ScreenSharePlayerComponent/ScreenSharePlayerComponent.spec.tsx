@@ -58,7 +58,7 @@ describe("ScreenSharePlayerComponent", () => {
   });
 
   it("should console error when ScreenSharePlayerContext is not provided", () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
 
     render(<ScreenSharePlayerComponent userId={userId} />);
 
@@ -129,7 +129,7 @@ describe("ScreenSharePlayerComponent", () => {
   });
 
   it("should gracefully handle attachShareView errors", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
     const attachError = new Error("Failed to attach share view.");
 
     mockMediaStream.attachShareView.mockRejectedValue(attachError);
@@ -213,7 +213,7 @@ describe("ScreenSharePlayerComponent", () => {
   });
 
   it("should handle detachShareView errors gracefully", async () => {
-    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
     const detachError = new Error("Failed to detach share view.");
 
     mockMediaStream.detachShareView.mockRejectedValue(detachError);
@@ -244,6 +244,8 @@ describe("ScreenSharePlayerComponent", () => {
   });
 
   it("should re-run effect when userId prop changes", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+
     const { rerender } = render(
       <ScreenSharePlayerContext.Provider value={mockContainerRef}>
         <ScreenSharePlayerComponent userId={userId} />
@@ -276,5 +278,7 @@ describe("ScreenSharePlayerComponent", () => {
     await vi.waitFor(() => {
       expect(mockMediaStream.attachShareView).toHaveBeenCalledWith(newUserId);
     });
+
+    warnSpy.mockRestore();
   });
 });

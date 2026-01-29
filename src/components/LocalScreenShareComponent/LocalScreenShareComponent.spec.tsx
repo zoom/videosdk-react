@@ -16,6 +16,11 @@ vi.mock("@zoom/videosdk", () => ({
   },
 }));
 
+const mockUseSessionUsers = vi.hoisted(() => vi.fn());
+vi.mock("../../hooks", () => ({
+  useSessionUsers: mockUseSessionUsers,
+}));
+
 describe("LocalScreenShareComponent", () => {
   let mockClient: Mocked<VideoClient>;
   let mockMediaStream: Mocked<MediaStream>;
@@ -37,6 +42,7 @@ describe("LocalScreenShareComponent", () => {
     } as unknown as Mocked<VideoClient>;
 
     vi.mocked(ZoomVideo.createClient).mockReturnValue(mockClient);
+    mockUseSessionUsers.mockReturnValue([]);
     screenshareRef = createRef();
   });
 
@@ -214,5 +220,120 @@ describe("LocalScreenShareComponent", () => {
     cleanup?.();
 
     expect(mockMediaStream.stopShareScreen).toHaveBeenCalled();
+  });
+
+  it("should log error and set enabled to false when startShareScreen rejects", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const shareError = new Error("Failed to start screen share");
+
+    mockMediaStream.startShareScreen.mockRejectedValue(shareError);
+
+    const { container } = render(<LocalScreenShareComponent ref={screenshareRef} />);
+    const canvasElement = container.querySelector("canvas");
+
+    screenshareRef.current?.requestShare();
+
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith("Failed to start screenshare", shareError);
+    });
+
+    // Element should remain hidden after error
+    expect(canvasElement?.style.display).toEqual("none");
+
+    consoleSpy.mockRestore();
+  });
+
+  it("should log error when stopShareScreen throws in cleanup", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const stopError = new Error("Failed to stop screen share");
+
+    mockMediaStream.stopShareScreen.mockImplementation(() => {
+      throw stopError;
+    });
+
+    render(<LocalScreenShareComponent ref={screenshareRef} />);
+
+    const cleanup = screenshareRef.current?.requestShare() as unknown as () => void;
+
+    await waitFor(() => expect(mockMediaStream.startShareScreen).toHaveBeenCalled());
+
+    cleanup?.();
+
+    expect(consoleSpy).toHaveBeenCalledWith("Can't stopShareScreen", stopError);
+
+    consoleSpy.mockRestore();
+  });
+
+  it("should not register event listener when not in meeting", () => {
+    mockClient.getSessionInfo.mockReturnValue({ isInMeeting: false } as SessionInfo);
+
+    render(<LocalScreenShareComponent ref={screenshareRef} />);
+
+    expect(mockClient.on).not.toHaveBeenCalledWith("passively-stop-share", expect.any(Function));
+  });
+
+  it("should sync enabled state with currentUserSharerOn from useSessionUsers", async () => {
+    const currentUserId = 123;
+    mockClient.getSessionInfo.mockReturnValue({ isInMeeting: true, userId: currentUserId } as SessionInfo);
+
+    // Initially user is not sharing
+    mockUseSessionUsers.mockReturnValue([{ userId: currentUserId, sharerOn: false }]);
+
+    const { container, rerender } = render(<LocalScreenShareComponent ref={screenshareRef} />);
+    const canvasElement = container.querySelector("canvas");
+
+    // Element should be hidden
+    expect(canvasElement?.style.display).toEqual("none");
+
+    // Now simulate user starting to share (SDK-initiated)
+    mockUseSessionUsers.mockReturnValue([{ userId: currentUserId, sharerOn: true }]);
+
+    rerender(<LocalScreenShareComponent ref={screenshareRef} />);
+
+    await waitFor(() => {
+      expect(canvasElement?.style.display).toEqual("block");
+    });
+
+    // Now simulate user stopping share (SDK-initiated via stopShareScreen)
+    mockUseSessionUsers.mockReturnValue([{ userId: currentUserId, sharerOn: false }]);
+
+    rerender(<LocalScreenShareComponent ref={screenshareRef} />);
+
+    await waitFor(() => {
+      expect(canvasElement?.style.display).toEqual("none");
+    });
+  });
+
+  it("should expose setOnStateChange via React ref", () => {
+    render(<LocalScreenShareComponent ref={screenshareRef} />);
+
+    expect(screenshareRef.current).toHaveProperty("setOnStateChange");
+    expect(typeof screenshareRef.current?.setOnStateChange).toBe("function");
+  });
+
+  it("should call onStateChange callback when enabled state changes", async () => {
+    const currentUserId = 123;
+    mockClient.getSessionInfo.mockReturnValue({ isInMeeting: true, userId: currentUserId } as SessionInfo);
+    mockUseSessionUsers.mockReturnValue([{ userId: currentUserId, sharerOn: false }]);
+
+    const onStateChange = vi.fn();
+
+    const { rerender } = render(<LocalScreenShareComponent ref={screenshareRef} />);
+
+    // Set up the callback
+    screenshareRef.current?.setOnStateChange(onStateChange);
+
+    // Initial call with current state (false)
+    expect(onStateChange).toHaveBeenCalledWith(false);
+
+    onStateChange.mockClear();
+
+    // Trigger share to start
+    mockUseSessionUsers.mockReturnValue([{ userId: currentUserId, sharerOn: true }]);
+    rerender(<LocalScreenShareComponent ref={screenshareRef} />);
+
+    await waitFor(() => {
+      expect(onStateChange).toHaveBeenCalledWith(true);
+    });
   });
 });

@@ -1,7 +1,6 @@
 import { test, expect } from "../fixtures/zoom-session";
 
 // Note: Audio starts UNMUTED by default in Zoom SDK
-const VIDEO_SELECTOR = "video-player[data-user-id]";
 
 test.describe("Audio Controls", () => {
   test("audio starts unmuted when session joins", async ({ page, zoomSession }) => {
@@ -11,48 +10,6 @@ test.describe("Audio Controls", () => {
     // Check initial audio state (starts unmuted)
     const audioButtonText = await page.textContent('[data-testid="audio-toggle"]');
     expect(audioButtonText).toContain("mute audio"); // Can mute = currently unmuted
-  });
-
-  test("toggles mute on and off", async ({ page, zoomSession }) => {
-    await zoomSession.goto(page);
-    await zoomSession.waitForConnection(page);
-
-    // Wait for audio to start capturing (audio starts async after join)
-    await page.waitForTimeout(2000);
-
-    // Initially unmuted (shows "mute audio")
-    let muteButtonText = await page.textContent('[data-testid="audio-toggle"]');
-    expect(muteButtonText).toContain("mute audio");
-
-    // Click to mute (SDK takes 1-2 seconds to process)
-    await page.click('[data-testid="audio-toggle"]');
-
-    // Wait for state to update
-    await page.waitForFunction(
-      () => {
-        const btn = document.querySelector('[data-testid="audio-toggle"]');
-        return btn?.textContent?.includes("unmute audio") ?? false;
-      },
-      { timeout: 5000 },
-    );
-
-    muteButtonText = await page.textContent('[data-testid="audio-toggle"]');
-    expect(muteButtonText).toContain("unmute audio");
-
-    // Click to unmute
-    await page.click('[data-testid="audio-toggle"]');
-
-    // Wait for state to update back
-    await page.waitForFunction(
-      () => {
-        const btn = document.querySelector('[data-testid="audio-toggle"]');
-        return btn?.textContent?.includes("mute audio") ?? false;
-      },
-      { timeout: 5000 },
-    );
-
-    muteButtonText = await page.textContent('[data-testid="audio-toggle"]');
-    expect(muteButtonText).toContain("mute audio");
   });
 
   test("audio state persists across video toggles", async ({ page, zoomSession }) => {

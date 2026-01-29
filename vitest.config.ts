@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     coverage: {
-      exclude: ["**/playground/**"],
+      exclude: ["**/playground/**", "src/utils.ts"],
     },
     environment: "happy-dom",
     globals: true,

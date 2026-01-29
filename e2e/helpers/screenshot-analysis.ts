@@ -35,6 +35,38 @@ export async function isBlackScreen(
 }
 
 /**
+ * Analyze screenshot to determine if it's a white screen
+ * @param screenshot - Screenshot buffer from Playwright
+ * @param whiteThreshold - Pixel value threshold to consider as "white" (0-255)
+ * @param whitePercentageThreshold - Percentage of pixels that must be white to consider screen white (0-100)
+ * @returns true if the screenshot is mostly white
+ */
+export async function isWhiteScreen(
+  screenshot: Buffer,
+  whiteThreshold: number = 240,
+  whitePercentageThreshold: number = 95,
+): Promise<boolean> {
+  const png = PNG.sync.read(screenshot);
+  const { width, height, data } = png;
+  const totalPixels = width * height;
+  let whitePixels = 0;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+
+    // Check if pixel is white (all RGB values above threshold)
+    if (r > whiteThreshold && g > whiteThreshold && b > whiteThreshold) {
+      whitePixels++;
+    }
+  }
+
+  const whitePercentage = (whitePixels / totalPixels) * 100;
+  return whitePercentage >= whitePercentageThreshold;
+}
+
+/**
  * Compare two screenshots to determine if video is frozen
  * @param screenshot1 - First screenshot buffer
  * @param screenshot2 - Second screenshot buffer

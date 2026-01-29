@@ -26,8 +26,7 @@ test.describe("Session Lifecycle", () => {
     expect(statusText).toContain("loading");
   });
 
-  // Skip: App+NextSession.tsx generates JWT internally from session name, doesn't accept JWT via URL
-  test.skip("displays error when connection fails", async ({ page }) => {
+  test("displays error when connection fails", async ({ page }) => {
     test.setTimeout(60000); // Increase timeout for error scenarios
 
     const topic = generateTestTopic();
