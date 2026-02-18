@@ -10,6 +10,7 @@ import {
 import React from "react";
 
 const session = "TestOne";
+const userName = `User-${new Date().getTime().toString().slice(8)}`;
 const jwt = generateSignature(session, 1);
 
 export default function Videochat() {
@@ -65,4 +66,3 @@ export default function Videochat() {
   );
 }
 
-const userName = "ekaansh";

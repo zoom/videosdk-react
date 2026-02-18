@@ -2,17 +2,14 @@
 
 React SDK that provides custom hooks and components for integrating Zoom Video SDK functionality into React apps. The SDK aims to make using `@zoom/videosdk` easier in React apps for common use-cases while being extensible. It is interoperable with `@zoom/videosdk` and can be used alongside it.
 
-## Goals
-- Use as much or as little of this SDK along with `@zoom/videosdk`
-- Flexibile & Customisable
-- Extensible
+You can find demo apps using this for both [React & Vite](https://github.com/zoom/VideoSDK-React-Quickstart/) and [React & Next.js](https://github.com/zoom/VideoSDK-Nextjs-Quickstart/).
 
 ## Features
 
-- **Session Management**: Easy-to-use hooks for joining and managing Zoom video sessions
-- **Participant Handling**: Automatic participant state management and updates with reference stability
-- **Media Controls**: Simple hooks for audio/video state management
-- **Video Rendering**: React components for rendering participant video streams
+- **Simple Integration**: Get video chat running in your React app with just a few lines of code
+- **Custom Hooks**: Purpose-built hooks for session management, participant handling, and media controls
+- **Ready-to-use Components**: Pre-built video player component that manages video subscription and cleanup
+- **Flexible & Customizable**: Use alongside existing `@zoom/videosdk` code
 - **Screen Sharing**: Built-in screen sharing functionality with local and remote support
 - **TypeScript Support**: Full TypeScript support with comprehensive type definitions
 
@@ -20,7 +17,7 @@ React SDK that provides custom hooks and components for integrating Zoom Video S
 
 ```bash
 npm install @zoom/videosdk
-npm install https://github.com/zoom/videosdk-react/releases/download/v0.0.1/zoom-videosdk-react-0.0.1.tgz
+npm install @zoom/videosdk-react
 ```
 
 ## Prerequisites
@@ -57,11 +54,7 @@ playground/              # Example application
 import { useSession, useSessionUsers, VideoPlayerComponent, VideoPlayerContainerComponent } from '@zoom/videosdk-react';
 
 function VideoChat() {
-  const { isInSession, isLoading, isError } = useSession(
-    "session123", 
-    "your_jwt_token", 
-    "User Name"
-  );
+  const { isInSession, isLoading, isError } = useSession("session123", "your_jwt_token", "username");
   
   const participants = useSessionUsers();
   
@@ -73,10 +66,7 @@ function VideoChat() {
       {isInSession && (
         <VideoPlayerContainerComponent>
           {participants.map(participant => (
-            <VideoPlayerComponent 
-              key={participant.userId} 
-              user={participant} 
-            />
+            <VideoPlayerComponent key={participant.userId} user={participant} />
           ))}
         </VideoPlayerContainerComponent>
       )}

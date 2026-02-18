@@ -4,9 +4,17 @@
   "description": "A library for using @zoom/videosdk with React",
   "type": "module",
   "homepage": "https://github.com/zoom/videosdk-react",
+  "license": "SEE LICENSE IN LICENSE",
   "bugs": {
     "url": "https://github.com/zoom/videosdk-react/issues"
   },
+  "keywords": [
+    "zoom",
+    "videosdk",
+    "react",
+    "video",
+    "nextjs"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zoom/videosdk-react.git"
