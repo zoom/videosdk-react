@@ -1,6 +1,6 @@
-# Zoom Video SDK for React
+# React Library for Zoom Video SDK
 
-React SDK that provides custom hooks and components for integrating Zoom Video SDK functionality into React apps. The SDK aims to make using `@zoom/videosdk` easier in React apps for common use-cases while being extensible. It is interoperable with `@zoom/videosdk` and can be used alongside it.
+React library that provides custom hooks and components for integrating Zoom Video SDK functionality into React apps. The SDK aims to make using `@zoom/videosdk` easier in React apps for common use-cases while being extensible. It is interoperable with `@zoom/videosdk` and can be used alongside it.
 
 You can find demo apps using this for both [React & Vite](https://github.com/zoom/VideoSDK-React-Quickstart/) and [React & Next.js](https://github.com/zoom/VideoSDK-Nextjs-Quickstart/).
 
