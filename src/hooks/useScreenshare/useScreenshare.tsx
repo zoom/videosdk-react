@@ -1,7 +1,8 @@
-import React, { useEffect } from "react";
+import React from "react";
 import type { ScreenShareOption } from "@zoom/videosdk";
 import type { ScreenshareRef } from "../../components/LocalScreenShareComponent/LocalScreenShareComponent";
 import ZoomVideo from "@zoom/videosdk";
+import useMyself from "../useMyself/useMyself";
 
 /**
  * Hook to share screen
@@ -28,24 +29,18 @@ import ZoomVideo from "@zoom/videosdk";
  */
 const useScreenshare = () => {
   const ScreenshareRef: ScreenshareRef = React.useRef(null);
-  const [isScreensharing, setIsScreensharing] = React.useState<boolean>(false);
-
-  useEffect(() => {
-    if (ScreenshareRef.current) {
-      ScreenshareRef.current.setOnStateChange(setIsScreensharing);
-    }
-  }, []);
+  // The local user's share state is already reactive via the SDK's participant data
+  const isScreensharing = useMyself()?.sharerOn ?? false;
 
   /**
    * Start screen sharing with optional configuration
    * @param options - Optional screen share configuration from @zoom/videosdk
    */
-  const startScreenshare = React.useCallback((options?: ScreenShareOption & {}) => {
+  const startScreenshare = React.useCallback((options?: ScreenShareOption) => {
     if (!ScreenshareRef.current) {
       console.error("Screenshare component not available");
       return;
     }
-    ScreenshareRef.current.setOnStateChange(setIsScreensharing);
     ScreenshareRef.current.requestShare(options);
   }, []);
 

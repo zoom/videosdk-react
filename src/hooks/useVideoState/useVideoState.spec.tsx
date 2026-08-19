@@ -1,5 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import ZoomVideo, {
+  ConnectionState,
+  event_connection_change as ConnectionChangeFn,
   event_video_capturing_change as VideoCapturingChangeFn,
   type CaptureVideoOption,
   type SessionInfo,
@@ -11,6 +13,11 @@ import useVideoState from "./useVideoState";
 vi.mock("@zoom/videosdk", () => ({
   default: {
     createClient: vi.fn(),
+  },
+  ConnectionState: {
+    Closed: "Closed",
+    Connected: "Connected",
+    Reconnecting: "Reconnecting",
   },
 }));
 
@@ -69,12 +76,65 @@ describe("useVideoState", () => {
     expect(mockClient.off).toHaveBeenCalledWith("video-capturing-change", expect.any(Function));
   });
 
-  it("should not register event listener when not in meeting", () => {
+  it("should not register video-capturing-change listener when not in meeting", () => {
     mockClient.getSessionInfo.mockReturnValue({ isInMeeting: false } as SessionInfo);
 
     renderHook(() => useVideoState());
 
-    expect(mockClient.on).not.toHaveBeenCalled();
+    expect(mockClient.on).not.toHaveBeenCalledWith(
+      "video-capturing-change",
+      expect.any(Function),
+    );
+  });
+
+  it("should subscribe to video state after joining when mounted before the session connects", async () => {
+    mockClient.getSessionInfo.mockReturnValue({ isInMeeting: false } as SessionInfo);
+
+    let connectionChangeHandler: typeof ConnectionChangeFn | undefined;
+    mockClient.on.mockImplementation((event: string, callback: (payload: any) => void) => {
+      if (event === "connection-change") {
+        connectionChangeHandler = callback;
+      }
+    });
+
+    renderHook(() => useVideoState());
+
+    // Not subscribed to media events yet — session hasn't connected
+    expect(mockClient.on).not.toHaveBeenCalledWith(
+      "video-capturing-change",
+      expect.any(Function),
+    );
+
+    act(() => {
+      connectionChangeHandler?.({ state: ConnectionState.Connected });
+    });
+
+    await waitFor(() => {
+      expect(mockClient.on).toHaveBeenCalledWith("video-capturing-change", expect.any(Function));
+    });
+  });
+
+  it("should reset video state to false when the connection closes", async () => {
+    mockMediaStream.isCapturingVideo.mockReturnValue(true);
+
+    let connectionChangeHandler: typeof ConnectionChangeFn | undefined;
+    mockClient.on.mockImplementation((event: string, callback: (payload: any) => void) => {
+      if (event === "connection-change") {
+        connectionChangeHandler = callback;
+      }
+    });
+
+    const { result } = renderHook(() => useVideoState());
+
+    expect(result.current.isVideoOn).toEqual(true);
+
+    act(() => {
+      connectionChangeHandler?.({ state: ConnectionState.Closed });
+    });
+
+    await waitFor(() => {
+      expect(result.current.isVideoOn).toEqual(false);
+    });
   });
 
   it("should update state when video-capturing-change event fires", async () => {

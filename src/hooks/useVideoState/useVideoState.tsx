@@ -1,5 +1,6 @@
 import React from "react";
 import ZoomVideo, { type CaptureVideoOption } from "@zoom/videosdk";
+import useInMeeting from "../useInMeeting/useInMeeting";
 
 /**
  * Hook to access and manage video state
@@ -31,7 +32,8 @@ import ZoomVideo, { type CaptureVideoOption } from "@zoom/videosdk";
 const useVideoState = () => {
   const client = ZoomVideo.createClient();
   const [videoState, setVideoState] = React.useState<boolean>(false);
-  const inMeeting = client.getSessionInfo().isInMeeting;
+  // Resubscribes when the user joins (even if mounted beforehand); resets on session close.
+  const inMeeting = useInMeeting(() => setVideoState(false));
 
   React.useEffect(() => {
     if (!inMeeting) {

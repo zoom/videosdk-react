@@ -8,6 +8,7 @@ import {
   useAudioState,
   VideoPlayerContainerComponent,
 } from "../../src";
+import { VideoQuality } from "@zoom/videosdk";
 import React from "react";
 
 export default function Videochat() {
@@ -23,6 +24,7 @@ export default function Videochat() {
   const { isVideoOn, toggleVideo } = useVideoState();
   const { isAudioMuted, toggleMute } = useAudioState();
   const users = useSessionUsers();
+  const [quality, setQuality] = useState<VideoQuality>(VideoQuality.Video_360P);
 
   return (
     <div className="flex h-full w-full flex-1 flex-col">
@@ -49,7 +51,7 @@ export default function Videochat() {
       >
         <VideoPlayerContainerComponent key={session}>
           {users.map((user) => (
-            <VideoPlayerComponent key={`${session}-${user.userId}`} user={user} />
+            <VideoPlayerComponent key={`${session}-${user.userId}`} user={user} quality={quality} />
           ))}
         </VideoPlayerContainerComponent>
       </div>
@@ -75,6 +77,20 @@ export default function Videochat() {
               data-testid="audio-toggle"
             >
               {isAudioMuted ? "unmute audio" : "mute audio"}
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setQuality((q) =>
+                  q === VideoQuality.Video_360P
+                    ? VideoQuality.Video_720P
+                    : VideoQuality.Video_360P,
+                )
+              }
+              title="toggle quality"
+              data-testid="quality-toggle"
+            >
+              {quality === VideoQuality.Video_720P ? "720p" : "360p"}
             </button>
           </div>
         </div>

@@ -95,4 +95,43 @@ test.describe("Video Rendering and Quality", () => {
     expect(box!.width).toBeGreaterThan(50);
     expect(box!.height).toBeGreaterThan(50);
   });
+
+  test("re-attaches the video at the new quality when quality changes", async ({ page }) => {
+    // VideoQuality.Video_360P === 2, VideoQuality.Video_720P === 3
+    const QUALITY_360P = "2";
+    const QUALITY_720P = "3";
+
+    const topic = generateTestTopic();
+    await joinSession(page, topic, "TestUser");
+
+    await page.waitForSelector(VIDEO_SELECTOR, { timeout: 15000 });
+
+    // The stream is stamped with the initial (360p) quality
+    await page.waitForFunction(
+      (q) => document.querySelector(`video-player[data-video-quality='${q}']`) !== null,
+      QUALITY_360P,
+      { timeout: 15000 },
+    );
+
+    const initialUserId = await page.locator(VIDEO_SELECTOR).first().getAttribute("data-user-id");
+    expect(initialUserId).toBeTruthy();
+
+    // Bump quality to 720p
+    await page.click('[data-testid="quality-toggle"]');
+
+    // The stream must be detached and re-attached at the new quality (was a silent no-op before the fix)
+    await page.waitForFunction(
+      (q) => {
+        const el = document.querySelector("video-player[data-user-id]");
+        return el !== null && el.getAttribute("data-video-quality") === q;
+      },
+      QUALITY_720P,
+      { timeout: 15000 },
+    );
+
+    // Video is still rendered for the same user after the re-attach
+    expect(await page.locator(VIDEO_SELECTOR).count()).toBeGreaterThan(0);
+    const reattachedUserId = await page.locator(VIDEO_SELECTOR).first().getAttribute("data-user-id");
+    expect(reattachedUserId).toBe(initialUserId);
+  });
 });

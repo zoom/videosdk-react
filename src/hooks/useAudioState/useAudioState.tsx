@@ -4,6 +4,7 @@ import ZoomVideo, {
   type event_current_audio_change,
   type AudioOption,
 } from "@zoom/videosdk";
+import useInMeeting from "../useInMeeting/useInMeeting";
 
 /**
  * Hook to access and manage audio state
@@ -44,7 +45,11 @@ const useAudioState = () => {
   const client = ZoomVideo.createClient();
   const [isAudioMuted, setIsAudioMuted] = React.useState<boolean>(true);
   const [isCapturingAudio, setIsCapturingAudio] = React.useState<boolean>(false);
-  const inMeeting = client.getSessionInfo().isInMeeting;
+  // Resubscribes when the user joins (even if mounted beforehand); resets on session close.
+  const inMeeting = useInMeeting(() => {
+    setIsCapturingAudio(false);
+    setIsAudioMuted(true);
+  });
 
   React.useEffect(() => {
     if (!inMeeting) {
@@ -65,8 +70,6 @@ const useAudioState = () => {
     client.on("current-audio-change", handler);
     return () => {
       client.off("current-audio-change", handler);
-      setIsCapturingAudio(false);
-      setIsAudioMuted(true);
     };
   }, [client, inMeeting]);
 

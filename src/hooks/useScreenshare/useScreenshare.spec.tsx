@@ -1,14 +1,19 @@
-import { act, renderHook } from "@testing-library/react";
-import type { ScreenShareOption } from "@zoom/videosdk";
+import { renderHook } from "@testing-library/react";
+import type { Participant, ScreenShareOption } from "@zoom/videosdk";
 import ZoomVideo from "@zoom/videosdk";
 import { afterEach, beforeEach, describe, expect, it, vi, type Mocked } from "vitest";
 import type { MediaStream, VideoClient } from "../../test-types";
+import useMyself from "../useMyself/useMyself";
 import useScreenshare from "./useScreenshare";
 
 vi.mock("@zoom/videosdk", () => ({
   default: {
     createClient: vi.fn(),
   },
+}));
+
+vi.mock("../useMyself/useMyself", () => ({
+  default: vi.fn(),
 }));
 
 describe("useScreenshare", () => {
@@ -25,6 +30,7 @@ describe("useScreenshare", () => {
     } as unknown as Mocked<VideoClient>;
 
     vi.mocked(ZoomVideo.createClient).mockReturnValue(mockClient);
+    vi.mocked(useMyself).mockReturnValue(undefined);
   });
 
   afterEach(() => {
@@ -55,7 +61,6 @@ describe("useScreenshare", () => {
 
     result.current.ScreenshareRef.current = {
       requestShare: mockRequestShare,
-      setOnStateChange: vi.fn(),
     };
     result.current.startScreenshare();
 
@@ -69,7 +74,6 @@ describe("useScreenshare", () => {
 
     result.current.ScreenshareRef.current = {
       requestShare: mockRequestShare,
-      setOnStateChange: vi.fn(),
     };
     result.current.startScreenshare(shareOptions);
 
@@ -106,76 +110,19 @@ describe("useScreenshare", () => {
     expect(returnValue).toBe("");
   });
 
-  it("should update isScreensharing when setOnStateChange callback is triggered", () => {
+  it("should reflect the local user's share state from useMyself", () => {
+    vi.mocked(useMyself).mockReturnValue({ userId: 1, sharerOn: true } as Participant);
+
     const { result } = renderHook(() => useScreenshare());
-
-    const mockSetOnStateChange = vi.fn();
-    result.current.ScreenshareRef.current = {
-      requestShare: vi.fn(),
-      setOnStateChange: mockSetOnStateChange,
-    };
-
-    // Trigger startScreenshare which calls setOnStateChange
-    result.current.startScreenshare();
-
-    // Get the callback that was passed to setOnStateChange
-    const stateChangeCallback = mockSetOnStateChange.mock.calls[0][0];
-
-    // Simulate screen sharing starting
-    act(() => {
-      stateChangeCallback(true);
-    });
 
     expect(result.current.isScreensharing).toBe(true);
+  });
 
-    // Simulate screen sharing stopping
-    act(() => {
-      stateChangeCallback(false);
-    });
+  it("should report not sharing when the local user is not sharing", () => {
+    vi.mocked(useMyself).mockReturnValue({ userId: 1, sharerOn: false } as Participant);
+
+    const { result } = renderHook(() => useScreenshare());
 
     expect(result.current.isScreensharing).toBe(false);
-  });
-
-  it("should set up setOnStateChange on mount when ref is available", () => {
-    const mockSetOnStateChange = vi.fn();
-    const { result } = renderHook(() => useScreenshare());
-
-    // Simulate ref being set (as would happen when LocalScreenShareComponent mounts)
-    act(() => {
-      result.current.ScreenshareRef.current = {
-        requestShare: vi.fn(),
-        setOnStateChange: mockSetOnStateChange,
-      };
-    });
-
-    // Re-render to trigger useEffect
-    const { result: result2 } = renderHook(() => useScreenshare());
-
-    act(() => {
-      result2.current.ScreenshareRef.current = {
-        requestShare: vi.fn(),
-        setOnStateChange: mockSetOnStateChange,
-      };
-    });
-
-    // The setOnStateChange should be called during startScreenshare
-    result2.current.startScreenshare();
-    expect(mockSetOnStateChange).toHaveBeenCalled();
-  });
-
-  it("should call setOnStateChange when startScreenshare is invoked", () => {
-    const mockSetOnStateChange = vi.fn();
-    const mockRequestShare = vi.fn();
-    const { result } = renderHook(() => useScreenshare());
-
-    result.current.ScreenshareRef.current = {
-      requestShare: mockRequestShare,
-      setOnStateChange: mockSetOnStateChange,
-    };
-
-    result.current.startScreenshare();
-
-    expect(mockSetOnStateChange).toHaveBeenCalledWith(expect.any(Function));
-    expect(mockRequestShare).toHaveBeenCalled();
   });
 });

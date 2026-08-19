@@ -1,9 +1,6 @@
 import React from "react";
-import ZoomVideo, {
-  ConnectionState,
-  type event_connection_change,
-  type Participant,
-} from "@zoom/videosdk";
+import ZoomVideo, { type Participant } from "@zoom/videosdk";
+import useInMeeting from "../useInMeeting/useInMeeting";
 
 /**
  * Hook to access participants in the current session
@@ -30,6 +27,8 @@ const useSessionUsers = () => {
   const client = ZoomVideo.createClient();
 
   React.useEffect(() => {
+    // Seed with any participants already present — the hook may mount after users joined
+    setSessionUsers(client.getAllUser());
     const handler = () => {
       setSessionUsers(client.getAllUser());
     };
@@ -43,18 +42,8 @@ const useSessionUsers = () => {
     };
   }, [client]);
 
-  React.useEffect(() => {
-    const connectionHandler: typeof event_connection_change = (event) => {
-      if (event.state === ConnectionState.Closed) {
-        setSessionUsers([]);
-      }
-    };
-    client.on("connection-change", connectionHandler);
-
-    return () => {
-      client.off("connection-change", connectionHandler);
-    };
-  }, [client]);
+  // Clear the participant list when the session closes
+  useInMeeting(() => setSessionUsers([]));
 
   return sessionUsers;
 };

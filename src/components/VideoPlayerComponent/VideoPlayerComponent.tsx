@@ -30,6 +30,8 @@ const attachVideo = async (
     // Double-check element wasn't added while we were awaiting
     if (!container.querySelector(videoSelector)) {
       (userVideo as HTMLElement).setAttribute("data-user-id", String(userId));
+      // Stamp the rendered quality so we can detect quality changes and re-attach
+      (userVideo as HTMLElement).setAttribute("data-video-quality", String(quality));
       container.appendChild(userVideo as VideoPlayerType);
       return true;
     } else {
@@ -121,6 +123,12 @@ const VideoPlayerComponent = ({ user, quality = VideoQuality.Video_360P }: Video
   const client = ZoomVideo.createClient();
   // Track if this component instance is mounted - used to prevent cleanup race conditions
   const isMountedRef = React.useRef(true);
+  // Quality currently attached for this user — source of truth for re-attach decisions.
+  // Reading it back off the DOM races with an in-flight detach/attach (the element may not
+  // be appended yet, or may still carry the old quality), so we keep it here instead.
+  const attachedQualityRef = React.useRef<VideoQuality | null>(null);
+  // Serialize attach/detach so overlapping renders can't interleave them out of order.
+  const opChainRef = React.useRef<Promise<unknown>>(Promise.resolve());
   // For React 18 compat
   // eslint-disable-next-line react-x/no-use-context
   const videoContainerRef = React.useContext(VideoPlayerContext);
@@ -151,9 +159,23 @@ const VideoPlayerComponent = ({ user, quality = VideoQuality.Video_360P }: Video
     const videoSelector = `[data-user-id='${user.userId}']`;
 
     if (user.bVideoOn) {
-      void attachVideo(container, videoSelector, user.userId, mediaStream, quality);
+      const qualityChanged =
+        attachedQualityRef.current !== null && attachedQualityRef.current !== quality;
+      attachedQualityRef.current = quality;
+      // If quality changed for an already-attached stream, detach first so the re-attach
+      // takes effect at the new quality (otherwise attachVideo is a no-op). Chained onto
+      // any prior op so a rapid quality flip can't run its detach/attach out of order.
+      opChainRef.current = opChainRef.current.then(async () => {
+        if (qualityChanged) {
+          await detachVideo(container, videoSelector, user.userId, mediaStream);
+        }
+        await attachVideo(container, videoSelector, user.userId, mediaStream, quality);
+      });
     } else {
-      void detachVideo(container, videoSelector, user.userId, mediaStream);
+      attachedQualityRef.current = null;
+      opChainRef.current = opChainRef.current.then(() =>
+        detachVideo(container, videoSelector, user.userId, mediaStream),
+      );
     }
 
     return () => {

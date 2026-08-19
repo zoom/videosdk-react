@@ -219,4 +219,82 @@ describe("VideoPlayerComponent", () => {
       expect(mockMediaStream.detachVideo).toHaveBeenCalledWith(1234);
     });
   });
+
+  it("should re-attach the video at the new quality when quality changes", async () => {
+    const { rerender } = render(
+      <VideoPlayerContext.Provider value={mockContainerRef}>
+        <VideoPlayerComponent user={mockParticipant} quality={2 as VideoQuality} />
+      </VideoPlayerContext.Provider>,
+    );
+
+    await vi.runAllTimersAsync();
+    await vi.waitFor(() => {
+      expect(mockMediaStream.attachVideo).toHaveBeenCalledWith(1234, 2);
+    });
+
+    vi.clearAllMocks();
+
+    // Same participant, higher quality — the stream should be detached and re-attached
+    rerender(
+      <VideoPlayerContext.Provider value={mockContainerRef}>
+        <VideoPlayerComponent user={mockParticipant} quality={3 as VideoQuality} />
+      </VideoPlayerContext.Provider>,
+    );
+
+    await vi.runAllTimersAsync();
+    await vi.waitFor(() => {
+      expect(mockMediaStream.detachVideo).toHaveBeenCalledWith(1234);
+      expect(mockMediaStream.attachVideo).toHaveBeenCalledWith(1234, 3);
+    });
+  });
+
+  it("should detect a quality change even when it happens before the previous attach settles", async () => {
+    // Regression: quality detection used to read `data-video-quality` off the DOM. When
+    // quality changes again before the first attach has appended its element, the DOM read
+    // sees nothing and skips the detach, leaving the stream stuck at the old quality. The
+    // ref-based detection must catch it. Note: no timer flush between the two renders.
+    const { rerender } = render(
+      <VideoPlayerContext.Provider value={mockContainerRef}>
+        <VideoPlayerComponent user={mockParticipant} quality={2 as VideoQuality} />
+      </VideoPlayerContext.Provider>,
+    );
+
+    rerender(
+      <VideoPlayerContext.Provider value={mockContainerRef}>
+        <VideoPlayerComponent user={mockParticipant} quality={3 as VideoQuality} />
+      </VideoPlayerContext.Provider>,
+    );
+
+    await vi.runAllTimersAsync();
+    await vi.waitFor(() => {
+      expect(mockMediaStream.detachVideo).toHaveBeenCalledWith(1234);
+      // The last attach wins and runs at the latest quality (ops are serialized in order)
+      const calls = mockMediaStream.attachVideo.mock.calls;
+      expect(calls[calls.length - 1]).toEqual([1234, 3]);
+    });
+  });
+
+  it("should not re-attach when quality is unchanged across re-renders", async () => {
+    const { rerender } = render(
+      <VideoPlayerContext.Provider value={mockContainerRef}>
+        <VideoPlayerComponent user={mockParticipant} quality={2 as VideoQuality} />
+      </VideoPlayerContext.Provider>,
+    );
+
+    await vi.runAllTimersAsync();
+    await vi.waitFor(() => {
+      expect(mockMediaStream.attachVideo).toHaveBeenCalledWith(1234, 2);
+    });
+
+    vi.clearAllMocks();
+
+    rerender(
+      <VideoPlayerContext.Provider value={mockContainerRef}>
+        <VideoPlayerComponent user={{ ...mockParticipant }} quality={2 as VideoQuality} />
+      </VideoPlayerContext.Provider>,
+    );
+
+    await vi.runAllTimersAsync();
+    expect(mockMediaStream.detachVideo).not.toHaveBeenCalled();
+  });
 });

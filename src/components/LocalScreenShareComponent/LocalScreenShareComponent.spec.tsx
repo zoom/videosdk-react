@@ -1,5 +1,7 @@
 import { act, render, waitFor } from "@testing-library/react";
 import ZoomVideo, {
+  ConnectionState,
+  event_connection_change as ConnectionChangeFn,
   event_passively_stop_share as PassivelyStopShareFn,
   type ScreenShareOption,
   type SessionInfo,
@@ -13,6 +15,11 @@ import LocalScreenShareComponent from "./LocalScreenShareComponent";
 vi.mock("@zoom/videosdk", () => ({
   default: {
     createClient: vi.fn(),
+  },
+  ConnectionState: {
+    Closed: "Closed",
+    Connected: "Connected",
+    Reconnecting: "Reconnecting",
   },
 }));
 
@@ -304,36 +311,33 @@ describe("LocalScreenShareComponent", () => {
     });
   });
 
-  it("should expose setOnStateChange via React ref", () => {
-    render(<LocalScreenShareComponent ref={screenshareRef} />);
+  it("should share once the session connects, even when mounted before joining", async () => {
+    // Mounted before the session is connected
+    mockClient.getSessionInfo.mockReturnValue({ isInMeeting: false } as SessionInfo);
 
-    expect(screenshareRef.current).toHaveProperty("setOnStateChange");
-    expect(typeof screenshareRef.current?.setOnStateChange).toBe("function");
-  });
+    let connectionChangeHandler: typeof ConnectionChangeFn | undefined;
+    mockClient.on.mockImplementation((event: string, callback: (payload: any) => void) => {
+      if (event === "connection-change") {
+        connectionChangeHandler = callback;
+      }
+    });
 
-  it("should call onStateChange callback when enabled state changes", async () => {
-    const currentUserId = 123;
-    mockClient.getSessionInfo.mockReturnValue({ isInMeeting: true, userId: currentUserId } as SessionInfo);
-    mockUseSessionUsers.mockReturnValue([{ userId: currentUserId, sharerOn: false }]);
+    const { container } = render(<LocalScreenShareComponent ref={screenshareRef} />);
+    const canvasElement = container.querySelector("canvas");
 
-    const onStateChange = vi.fn();
+    // Before joining, requestShare is a no-op
+    screenshareRef.current?.requestShare();
+    expect(mockMediaStream.startShareScreen).not.toHaveBeenCalled();
 
-    const { rerender } = render(<LocalScreenShareComponent ref={screenshareRef} />);
+    // Session connects — the component should pick this up reactively
+    act(() => {
+      connectionChangeHandler?.({ state: ConnectionState.Connected });
+    });
 
-    // Set up the callback
-    screenshareRef.current?.setOnStateChange(onStateChange);
-
-    // Initial call with current state (false)
-    expect(onStateChange).toHaveBeenCalledWith(false);
-
-    onStateChange.mockClear();
-
-    // Trigger share to start
-    mockUseSessionUsers.mockReturnValue([{ userId: currentUserId, sharerOn: true }]);
-    rerender(<LocalScreenShareComponent ref={screenshareRef} />);
+    screenshareRef.current?.requestShare();
 
     await waitFor(() => {
-      expect(onStateChange).toHaveBeenCalledWith(true);
+      expect(mockMediaStream.startShareScreen).toHaveBeenCalledWith(canvasElement, undefined);
     });
   });
 });

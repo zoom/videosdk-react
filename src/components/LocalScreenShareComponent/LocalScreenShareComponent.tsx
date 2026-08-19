@@ -1,13 +1,13 @@
 import React from "react";
 import ZoomVideo, { type ScreenShareOption } from "@zoom/videosdk";
 import { useSessionUsers } from "../../hooks";
+import useInMeeting from "../../hooks/useInMeeting/useInMeeting";
 
 /**
  * Ref type for ScreenshareComponent
  */
 export type ScreenshareRef = React.RefObject<{
   requestShare: (options?: ScreenShareOption) => void;
-  setOnStateChange: (callback: (isSharing: boolean) => void) => void;
 } | null>;
 
 /**
@@ -39,12 +39,10 @@ const LocalScreenShareComponent: React.FC<{ ref: ScreenshareRef }> = React.forwa
   (_, ScreenshareRef) => {
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
     const videoRef = React.useRef<HTMLVideoElement>(null);
-    const onStateChangeRef = React.useRef<((isSharing: boolean) => void) | null>(null);
-    const enabledRef = React.useRef(false);
     const [enabled, setEnabled] = React.useState(false);
     const [isVideoElement, setIsVideoElement] = React.useState(false);
     const client = ZoomVideo.createClient();
-    const inMeeting = client.getSessionInfo().isInMeeting;
+    const inMeeting = useInMeeting();
     const users = useSessionUsers();
 
     if (!ScreenshareRef) {
@@ -53,10 +51,6 @@ const LocalScreenShareComponent: React.FC<{ ref: ScreenshareRef }> = React.forwa
       );
       return null;
     }
-
-    React.useEffect(() => {
-      enabledRef.current = enabled;
-    }, [enabled]);
 
     React.useEffect(() => {
       if (!inMeeting) {
@@ -127,15 +121,7 @@ const LocalScreenShareComponent: React.FC<{ ref: ScreenshareRef }> = React.forwa
 
     React.useImperativeHandle(ScreenshareRef, () => ({
       requestShare,
-      setOnStateChange: (callback: (isSharing: boolean) => void) => {
-        onStateChangeRef.current = callback;
-        callback(enabledRef.current);
-      },
     }));
-
-    React.useEffect(() => {
-      onStateChangeRef.current?.(enabled);
-    }, [enabled]);
 
     return (
       <>

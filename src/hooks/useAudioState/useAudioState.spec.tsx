@@ -1,6 +1,8 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import ZoomVideo, {
   AudioChangeAction,
+  ConnectionState,
+  event_connection_change as ConnectionChangeFn,
   event_current_audio_change as CurrentAudioChangeFn,
   type AudioOption,
   type SessionInfo,
@@ -16,6 +18,11 @@ vi.mock("@zoom/videosdk", () => ({
   AudioChangeAction: {
     Join: "Join",
     Leave: "Leave",
+  },
+  ConnectionState: {
+    Closed: "Closed",
+    Connected: "Connected",
+    Reconnecting: "Reconnecting",
   },
 }));
 
@@ -83,7 +90,61 @@ describe("useAudioState", () => {
 
     renderHook(() => useAudioState());
 
-    expect(mockClient.on).not.toHaveBeenCalled();
+    expect(mockClient.on).not.toHaveBeenCalledWith("current-audio-change", expect.any(Function));
+  });
+
+  it("should subscribe to audio state after joining when mounted before the session connects", async () => {
+    mockClient.getSessionInfo.mockReturnValue({ isInMeeting: false } as SessionInfo);
+
+    let connectionChangeHandler: typeof ConnectionChangeFn | undefined;
+    mockClient.on.mockImplementation((event: string, callback: (payload: any) => void) => {
+      if (event === "connection-change") {
+        connectionChangeHandler = callback;
+      }
+    });
+
+    renderHook(() => useAudioState());
+
+    expect(mockClient.on).not.toHaveBeenCalledWith("current-audio-change", expect.any(Function));
+
+    act(() => {
+      connectionChangeHandler?.({ state: ConnectionState.Connected });
+    });
+
+    await waitFor(() => {
+      expect(mockClient.on).toHaveBeenCalledWith("current-audio-change", expect.any(Function));
+    });
+  });
+
+  it("should reset audio state when the connection closes", async () => {
+    let audioChangeHandler: typeof CurrentAudioChangeFn | undefined;
+    let connectionChangeHandler: typeof ConnectionChangeFn | undefined;
+    mockClient.on.mockImplementation((event: string, callback: (payload: any) => void) => {
+      if (event === "current-audio-change") {
+        audioChangeHandler = callback;
+      } else if (event === "connection-change") {
+        connectionChangeHandler = callback;
+      }
+    });
+
+    const { result } = renderHook(() => useAudioState());
+
+    act(() => {
+      audioChangeHandler?.({ action: AudioChangeAction.Join, type: "computer" });
+    });
+
+    await waitFor(() => {
+      expect(result.current.isCapturingAudio).toEqual(true);
+    });
+
+    act(() => {
+      connectionChangeHandler?.({ state: ConnectionState.Closed });
+    });
+
+    await waitFor(() => {
+      expect(result.current.isCapturingAudio).toEqual(false);
+      expect(result.current.isAudioMuted).toEqual(true);
+    });
   });
 
   it("should set isCapturingAudio to true when Join event fires", async () => {

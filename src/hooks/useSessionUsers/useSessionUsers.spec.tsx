@@ -13,6 +13,11 @@ vi.mock("@zoom/videosdk", () => ({
   default: {
     createClient: vi.fn(),
   },
+  ConnectionState: {
+    Closed: "Closed",
+    Connected: "Connected",
+    Reconnecting: "Reconnecting",
+  },
 }));
 
 describe("useSessionUsers", () => {
@@ -27,6 +32,7 @@ describe("useSessionUsers", () => {
 
     mockClient = {
       getAllUser: vi.fn().mockReturnValue(mockParticipants),
+      getSessionInfo: vi.fn().mockReturnValue({ isInMeeting: false }),
       off: vi.fn(),
       on: vi.fn(),
     } as unknown as Mocked<VideoClient>;
@@ -38,10 +44,19 @@ describe("useSessionUsers", () => {
     vi.clearAllMocks();
   });
 
-  it("should initially return an empty array", () => {
+  it("should initially return an empty array when no participants are present", () => {
+    mockClient.getAllUser.mockReturnValue([]);
+
     const { result } = renderHook(() => useSessionUsers());
 
     expect(result.current).toEqual([]);
+  });
+
+  it("should seed with participants already present on mount", () => {
+    const { result } = renderHook(() => useSessionUsers());
+
+    expect(mockClient.getAllUser).toHaveBeenCalled();
+    expect(result.current).toEqual(mockParticipants);
   });
 
   it("should register user-added event listener on mount", () => {

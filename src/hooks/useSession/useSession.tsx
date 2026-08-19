@@ -45,6 +45,14 @@ export type SessionInitOptions = {
  */
 export type SessionOptions = SessionMediaOptions & SessionInitOptions;
 
+/** Coerce an unknown thrown value into the SDK's ExecutedFailure shape */
+const toExecutedFailure = (e: unknown): ExecutedFailure => {
+  if (e && typeof e === "object" && "reason" in e) {
+    return e as ExecutedFailure;
+  }
+  return { type: "INTERNAL_ERROR", reason: String(e), errorCode: -1 };
+};
+
 /**
  * Hook to join a Zoom Video SDK session
  *
@@ -61,7 +69,9 @@ export type SessionOptions = SessionMediaOptions & SessionInitOptions;
  * @param sessionIdleTimeoutMins - Optional timeout for idle sessions
  * @param sessionOptions - Optional configuration for session behavior
  *
- * @returns Object containing session state and error information
+ * @returns Object with `isInSession`, `isLoading`, `isError`, `error` (fatal join/init
+ * failure), and `mediaErrors` (non-fatal per-track failures — the session joined, but
+ * starting audio and/or video failed)
  *
  * @example
  * ```tsx
@@ -92,10 +102,12 @@ const useSession = (
   const [isInSession, setInSession] = React.useState(false);
   const [isError, setIsError] = React.useState<boolean>(false);
   const [error, setError] = React.useState<ExecutedFailure | null>(null);
+  // Errors from starting audio/video — the session is joined, but a track may have failed
+  const [mediaErrors, setMediaErrors] = React.useState<ExecutedFailure[]>([]);
 
-  if (!topic || !token || !userName) {
-    throw new Error("Missing required parameters: topic, token, userName");
-  }
+  // True while a reconnect is in flight, so Connected knows to clear isLoading itself —
+  // on a reconnect there's no initSession run to do it.
+  const reconnectingRef = React.useRef(false);
 
   const connectionHandler = ({ state }: ConnectionChangePayload) => {
     if (state === ConnectionState.Closed) {
@@ -104,10 +116,19 @@ const useSession = (
     } else if (state === ConnectionState.Connected) {
       setIsError(false);
       setInSession(true);
+      // On the initial join, Connected fires mid-join while tracks are still starting;
+      // initSession owns isLoading there. Only clear it ourselves when reconnecting.
+      if (reconnectingRef.current) {
+        setIsLoading(false);
+        reconnectingRef.current = false;
+      }
     } else if (state === ConnectionState.Reconnecting) {
+      reconnectingRef.current = true;
       setIsLoading(true);
       setIsError(false);
       setInSession(false);
+      // Per-track errors from the previous connection no longer reflect reality.
+      setMediaErrors([]);
     }
   };
 
@@ -128,33 +149,45 @@ const useSession = (
       return;
     }
 
+    if (!topic || !token || !userName) {
+      setIsError(true);
+      setError({
+        type: "INVALID_PARAMETERS",
+        reason: "Missing required parameters: topic, token, userName",
+        errorCode: -1,
+      } as ExecutedFailure);
+      return;
+    }
+
     client.on("connection-change", connectionHandler);
 
     const initSession = async () => {
       setIsLoading(true);
+      setIsError(false);
+      setError(null);
+      setMediaErrors([]);
       try {
         await client.init(language ?? "en-US", dependentAssets ?? "Global", initOptions);
         await client.join(topic, token, userName, sessionPassword, sessionIdleTimeoutMins);
         const mediaStream = client.getMediaStream();
-        if (!disableAudio && !disableVideo) {
-          await Promise.allSettled([
-            mediaStream.startAudio(audioOptions),
-            mediaStream.startVideo(videoOptions),
-          ]);
-        } else if (!disableAudio) {
-          await mediaStream.startAudio(audioOptions);
-        } else if (!disableVideo) {
-          await mediaStream.startVideo(videoOptions);
+        // Start each requested track independently so one failing doesn't block the other,
+        // and surface per-track failures via `mediaErrors` instead of swallowing them.
+        const results = await Promise.allSettled([
+          disableAudio ? null : mediaStream.startAudio(audioOptions),
+          disableVideo ? null : mediaStream.startVideo(videoOptions),
+        ]);
+        const failures = results
+          .filter((r): r is PromiseRejectedResult => r.status === "rejected")
+          .map((r) => toExecutedFailure(r.reason));
+        if (failures.length) {
+          console.warn("Some media tracks failed to start: ", failures);
+          setMediaErrors(failures);
         }
         setInSession(true);
       } catch (e: unknown) {
         setIsError(true);
         console.error("Error in session join: ", e);
-        if (e && typeof e === "object" && "reason" in e) {
-          setError(e as ExecutedFailure);
-        } else {
-          setError({ type: "INTERNAL_ERROR", reason: String(e), errorCode: -1 });
-        }
+        setError(toExecutedFailure(e));
       }
       setIsLoading(false);
     };
@@ -180,7 +213,7 @@ const useSession = (
     };
   }, [topic, token, userName, sessionPassword, sessionIdleTimeoutMins, sessionOptions]);
 
-  return { isInSession, isError, error, isLoading };
+  return { isInSession, isError, error, isLoading, mediaErrors };
 };
 
 export default useSession;

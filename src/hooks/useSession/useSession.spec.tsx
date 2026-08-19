@@ -46,22 +46,35 @@ describe("useSession", () => {
     vi.clearAllMocks();
   });
 
-  it("should throw error when topic is missing", () => {
-    expect(() => {
-      renderHook(() => useSession("", "token", "username"));
-    }).toThrow("Missing required parameters: topic, token, userName");
+  it("should surface an error (without throwing) when topic is missing", async () => {
+    const { result } = renderHook(() => useSession("", "token", "username"));
+
+    await waitFor(() => {
+      expect(result.current.isError).toEqual(true);
+      expect(result.current.error?.reason).toContain("Missing required parameters");
+    });
+    expect(mockClient.init).not.toHaveBeenCalled();
+    expect(mockClient.join).not.toHaveBeenCalled();
   });
 
-  it("should throw error when token is missing", () => {
-    expect(() => {
-      renderHook(() => useSession("topic", "", "username"));
-    }).toThrow("Missing required parameters: topic, token, userName");
+  it("should surface an error (without throwing) when token is missing", async () => {
+    const { result } = renderHook(() => useSession("topic", "", "username"));
+
+    await waitFor(() => {
+      expect(result.current.isError).toEqual(true);
+      expect(result.current.error?.reason).toContain("Missing required parameters");
+    });
+    expect(mockClient.join).not.toHaveBeenCalled();
   });
 
-  it("should throw error when username is missing", () => {
-    expect(() => {
-      renderHook(() => useSession("topic", "token", ""));
-    }).toThrow("Missing required parameters: topic, token, userName");
+  it("should surface an error (without throwing) when username is missing", async () => {
+    const { result } = renderHook(() => useSession("topic", "token", ""));
+
+    await waitFor(() => {
+      expect(result.current.isError).toEqual(true);
+      expect(result.current.error?.reason).toContain("Missing required parameters");
+    });
+    expect(mockClient.join).not.toHaveBeenCalled();
   });
 
   it("should return initial session state properties", () => {
@@ -393,6 +406,139 @@ describe("useSession", () => {
       expect(result.current.isInSession).toEqual(false);
       expect(result.current.isError).toEqual(false);
     });
+  });
+
+  it("should clear isLoading once reconnected", async () => {
+    let connectionChangeHandler: typeof ConnectionChangeFn | undefined;
+
+    mockClient.on.mockImplementation((event: string, callback: (payload: any) => void) => {
+      if (event === "connection-change") {
+        connectionChangeHandler = callback;
+      }
+    });
+
+    const { result } = renderHook(() => useSession("topic", "token", "username"));
+
+    await waitFor(() => {
+      expect(mockClient.on).toHaveBeenCalled();
+    });
+
+    act(() => {
+      connectionChangeHandler?.({ state: ConnectionState.Reconnecting });
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toEqual(true);
+    });
+
+    act(() => {
+      connectionChangeHandler?.({ state: ConnectionState.Connected });
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toEqual(false);
+      expect(result.current.isInSession).toEqual(true);
+    });
+  });
+
+  it("should join the session but surface mediaErrors when a track fails to start", async () => {
+    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const videoError = { type: "VIDEO_ERROR", reason: "Camera blocked", errorCode: 1 };
+
+    mockMediaStream.startVideo.mockRejectedValueOnce(videoError);
+
+    const { result } = renderHook(() => useSession("topic", "token", "username"));
+
+    await waitFor(() => {
+      expect(result.current.isInSession).toEqual(true);
+    });
+
+    // Session joined and audio succeeded, so it isn't a hard error...
+    expect(result.current.isError).toEqual(false);
+    // ...but the failed video track is reported via mediaErrors
+    expect(result.current.mediaErrors).toEqual([videoError]);
+
+    consoleSpy.mockRestore();
+  });
+
+  it("should collect mediaErrors for every track that fails to start", async () => {
+    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const audioError = { type: "AUDIO_ERROR", reason: "Mic blocked", errorCode: 1 };
+    const videoError = { type: "VIDEO_ERROR", reason: "Camera blocked", errorCode: 2 };
+
+    mockMediaStream.startAudio.mockRejectedValueOnce(audioError);
+    mockMediaStream.startVideo.mockRejectedValueOnce(videoError);
+
+    const { result } = renderHook(() => useSession("topic", "token", "username"));
+
+    await waitFor(() => {
+      expect(result.current.isInSession).toEqual(true);
+    });
+
+    expect(result.current.isError).toEqual(false);
+    expect(result.current.mediaErrors).toEqual([audioError, videoError]);
+
+    consoleSpy.mockRestore();
+  });
+
+  it("should clear stale mediaErrors when reconnecting", async () => {
+    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const videoError = { type: "VIDEO_ERROR", reason: "Camera blocked", errorCode: 1 };
+    mockMediaStream.startVideo.mockRejectedValueOnce(videoError);
+
+    let connectionChangeHandler: typeof ConnectionChangeFn | undefined;
+    mockClient.on.mockImplementation((event: string, callback: (payload: any) => void) => {
+      if (event === "connection-change") {
+        connectionChangeHandler = callback;
+      }
+    });
+
+    const { result } = renderHook(() => useSession("topic", "token", "username"));
+
+    await waitFor(() => {
+      expect(result.current.mediaErrors).toEqual([videoError]);
+    });
+
+    // Reconnect drops the now-stale per-track errors from the previous connection
+    act(() => {
+      connectionChangeHandler?.({ state: ConnectionState.Reconnecting });
+    });
+
+    await waitFor(() => {
+      expect(result.current.mediaErrors).toEqual([]);
+    });
+
+    consoleSpy.mockRestore();
+  });
+
+  it("should report only the failing track's error when the other track is disabled", async () => {
+    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const videoError = { type: "VIDEO_ERROR", reason: "Camera blocked", errorCode: 1 };
+    mockMediaStream.startVideo.mockRejectedValueOnce(videoError);
+
+    const { result } = renderHook(() =>
+      useSession("topic", "token", "username", undefined, undefined, { disableAudio: true }),
+    );
+
+    await waitFor(() => {
+      expect(result.current.isInSession).toEqual(true);
+    });
+
+    expect(mockMediaStream.startAudio).not.toHaveBeenCalled();
+    // The disabled audio track must not leave a phantom entry; only the real video failure
+    expect(result.current.mediaErrors).toEqual([videoError]);
+
+    consoleSpy.mockRestore();
+  });
+
+  it("should report no mediaErrors when all tracks start successfully", async () => {
+    const { result } = renderHook(() => useSession("topic", "token", "username"));
+
+    await waitFor(() => {
+      expect(result.current.isInSession).toEqual(true);
+    });
+
+    expect(result.current.mediaErrors).toEqual([]);
   });
 
   it("should handle errors when leaving session", async () => {
