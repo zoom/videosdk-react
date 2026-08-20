@@ -82,7 +82,7 @@ function VideoChat() {
 Manages the complete lifecycle of a Zoom video session.
 
 ```tsx
-const { isInSession, isLoading, isError, error } = useSession(
+const { isInSession, isLoading, isError, error, mediaErrors } = useSession(
   topic,           // Session topic/ID
   token,           // JWT authentication token
   userName,        // Display name
@@ -104,6 +104,12 @@ const { isInSession, isLoading, isError, error } = useSession(
 - `dependentAssets`: Asset loading strategy
 - `waitBeforeJoining`: Delay before auto-joining
 - `endSessionOnLeave`: End session when host leaves
+
+**Returns:**
+- `isInSession`: Whether the session is currently joined
+- `isLoading`: Whether a join or reconnect is in flight
+- `isError` / `error`: A fatal join/init failure (`ExecutedFailure`) — the session did not join
+- `mediaErrors`: Non-fatal per-track failures (`ExecutedFailure[]`) — the session joined, but starting audio and/or video failed. Cleared on reconnect.
 
 ### `useSessionUsers`
 
@@ -194,17 +200,19 @@ const {
 Manages screen sharing functionality.
 
 ```tsx
-const { ScreenshareRef, startScreenshare } = useScreenshare();
+const { ScreenshareRef, startScreenshare, stopScreenshare, isScreensharing } = useScreenshare();
 
 return (
   <div>
     <LocalScreenShareComponent ref={ScreenshareRef} />
-    <button onClick={() => startScreenshare({ audio: true })}>
-      Start Screen Share
+    <button onClick={() => (isScreensharing ? stopScreenshare() : startScreenshare({ audio: true }))}>
+      {isScreensharing ? "Stop Screen Share" : "Start Screen Share"}
     </button>
   </div>
 );
 ```
+
+`isScreensharing` reflects the local user's live share state (derived from participant data), so it stays in sync even if the share is stopped elsewhere.
 
 ## Components
 
@@ -222,12 +230,16 @@ Container wrapper for video players. Must wrap all `VideoPlayerComponent` instan
 
 ### `VideoPlayerComponent`
 
-Renders individual participant video streams.
+Renders individual participant video streams. Accepts an optional `quality` prop
+(`VideoQuality` from `@zoom/videosdk`, default `Video_360P`); changing it re-attaches
+the stream at the new quality.
 
 ```tsx
+import { VideoQuality } from "@zoom/videosdk";
+
 const participants = useSessionUsers()
 
-<VideoPlayerComponent user={participants[0]} />
+<VideoPlayerComponent user={participants[0]} quality={VideoQuality.Video_720P} />
 ```
 
 ### `ScreenShareContainerComponent`
