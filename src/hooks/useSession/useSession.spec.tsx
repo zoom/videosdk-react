@@ -441,6 +441,40 @@ describe("useSession", () => {
     });
   });
 
+  it("should clear isLoading after a failed reconnect (Reconnecting then Closed)", async () => {
+    let connectionChangeHandler: typeof ConnectionChangeFn | undefined;
+
+    mockClient.on.mockImplementation((event: string, callback: (payload: any) => void) => {
+      if (event === "connection-change") {
+        connectionChangeHandler = callback;
+      }
+    });
+
+    const { result } = renderHook(() => useSession("topic", "token", "username"));
+
+    await waitFor(() => {
+      expect(result.current.isInSession).toEqual(true);
+    });
+
+    act(() => {
+      connectionChangeHandler?.({ state: ConnectionState.Reconnecting });
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toEqual(true);
+    });
+
+    // The reconnect never recovers and the session closes. isLoading must not stay stuck true.
+    act(() => {
+      connectionChangeHandler?.({ state: ConnectionState.Closed });
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toEqual(false);
+      expect(result.current.isInSession).toEqual(false);
+    });
+  });
+
   it("should join the session but surface mediaErrors when a track fails to start", async () => {
     const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     const videoError = { type: "VIDEO_ERROR", reason: "Camera blocked", errorCode: 1 };

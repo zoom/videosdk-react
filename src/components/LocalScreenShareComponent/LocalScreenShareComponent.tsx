@@ -45,13 +45,6 @@ const LocalScreenShareComponent: React.FC<{ ref: ScreenshareRef }> = React.forwa
     const inMeeting = useInMeeting();
     const users = useSessionUsers();
 
-    if (!ScreenshareRef) {
-      console.error(
-        "Screenshare component ref is not provided, you must pass it from the useScreenshare hook",
-      );
-      return null;
-    }
-
     React.useEffect(() => {
       if (!inMeeting) {
         return;
@@ -122,6 +115,13 @@ const LocalScreenShareComponent: React.FC<{ ref: ScreenshareRef }> = React.forwa
     React.useImperativeHandle(ScreenshareRef, () => ({
       requestShare,
     }));
+
+    if (!ScreenshareRef) {
+      console.error(
+        "Screenshare component ref is not provided, you must pass it from the useScreenshare hook",
+      );
+      return null;
+    }
 
     return (
       <>

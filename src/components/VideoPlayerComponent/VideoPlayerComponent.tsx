@@ -165,17 +165,25 @@ const VideoPlayerComponent = ({ user, quality = VideoQuality.Video_360P }: Video
       // If quality changed for an already-attached stream, detach first so the re-attach
       // takes effect at the new quality (otherwise attachVideo is a no-op). Chained onto
       // any prior op so a rapid quality flip can't run its detach/attach out of order.
-      opChainRef.current = opChainRef.current.then(async () => {
-        if (qualityChanged) {
-          await detachVideo(container, videoSelector, user.userId, mediaStream);
-        }
-        await attachVideo(container, videoSelector, user.userId, mediaStream, quality);
-      });
+      opChainRef.current = opChainRef.current
+        .then(async () => {
+          if (qualityChanged) {
+            await detachVideo(container, videoSelector, user.userId, mediaStream);
+          }
+          await attachVideo(container, videoSelector, user.userId, mediaStream, quality);
+        })
+        .catch((e) => {
+          // Swallow so one failed op can't permanently reject the chain and stall all
+          // future attach/detach for this component.
+          console.error("[VideoPlayer] attach op failed", e);
+        });
     } else {
       attachedQualityRef.current = null;
-      opChainRef.current = opChainRef.current.then(() =>
-        detachVideo(container, videoSelector, user.userId, mediaStream),
-      );
+      opChainRef.current = opChainRef.current
+        .then(() => detachVideo(container, videoSelector, user.userId, mediaStream))
+        .catch((e) => {
+          console.error("[VideoPlayer] detach op failed", e);
+        });
     }
 
     return () => {
@@ -183,10 +191,16 @@ const VideoPlayerComponent = ({ user, quality = VideoQuality.Video_360P }: Video
       setTimeout(() => {
         if (!isMountedRef.current) {
           if (client.getSessionInfo().isInMeeting) {
-            void detachVideo(container, videoSelector, user.userId, mediaStream);
+            // Teardown must run after any queued quality re-attach; otherwise an in-flight
+            // attach can append its element after this cleanup has already completed.
+            opChainRef.current = opChainRef.current.then(() =>
+              detachVideo(container, videoSelector, user.userId, mediaStream),
+            );
           } else {
-            // Session ended - remove DOM elements directly
-            container.querySelectorAll(videoSelector).forEach((el) => el.remove());
+            // Session ended: wait for queued operations before removing their DOM output.
+            opChainRef.current = opChainRef.current.then(() => {
+              container.querySelectorAll(videoSelector).forEach((el) => el.remove());
+            });
           }
         }
       }, 0);

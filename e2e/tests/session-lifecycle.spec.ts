@@ -18,12 +18,28 @@ test.describe("Session Lifecycle", () => {
     await expect(page.locator('[data-testid="audio-toggle"]')).toBeVisible();
   });
 
-  test.skip("shows loading state while connecting", async ({ page, zoomSession }) => {
-    await zoomSession.goto(page);
+  test("shows loading state while connecting", async ({ page, zoomSession }) => {
+    // The loading state is transient — on a fast connect it's gone before we can
+    // read it. Stall the SDK's dependent-asset download (source.zoom.us, fetched
+    // during client.init) so isLoading stays true while we assert it, then release.
+    let releaseAssets!: () => void;
+    const assetsHeld = new Promise<void>((resolve) => (releaseAssets = resolve));
+    await page.route(/source\.zoom\.us/, async (route) => {
+      await assetsHeld;
+      await route.continue();
+    });
 
-    // Check for loading state
-    const statusText = await page.textContent('[data-testid="session-status"]');
-    expect(statusText).toContain("loading");
+    // Don't wait for networkidle — the stalled route keeps the page busy while we assert.
+    await page.goto(
+      `/e2e.html?session=${encodeURIComponent(zoomSession.topic)}&userName=TestUser`,
+      { waitUntil: "commit" },
+    );
+
+    await expect(page.locator('[data-testid="session-status"]')).toContainText("loading", {
+      timeout: 15000,
+    });
+
+    releaseAssets();
   });
 
   test("displays error when connection fails", async ({ page }) => {

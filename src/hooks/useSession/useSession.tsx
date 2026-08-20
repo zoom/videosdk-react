@@ -113,6 +113,10 @@ const useSession = (
     if (state === ConnectionState.Closed) {
       setInSession(false);
       setIsError(false);
+      // A reconnect that never recovers ends in Closed; clear the loading state it set so
+      // the UI isn't wedged on "loading", and reset the flag for the next connect cycle.
+      setIsLoading(false);
+      reconnectingRef.current = false;
     } else if (state === ConnectionState.Connected) {
       setIsError(false);
       setInSession(true);

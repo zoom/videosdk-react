@@ -56,6 +56,9 @@ describe("useScreenShareUsers", () => {
   });
 
   it("should seed with users already sharing on mount", () => {
+    mockClient.getSessionInfo.mockReturnValue({ isInMeeting: true, userId: 999 } as ReturnType<
+      VideoClient["getSessionInfo"]
+    >);
     mockClient.getAllUser.mockReturnValue([
       { userId: 1, sharerOn: true },
       { userId: 2, sharerOn: false },
@@ -83,6 +86,9 @@ describe("useScreenShareUsers", () => {
   });
 
   it("should not add a duplicate userId when a seeded sharer fires a Start event", async () => {
+    mockClient.getSessionInfo.mockReturnValue({ isInMeeting: true, userId: 999 } as ReturnType<
+      VideoClient["getSessionInfo"]
+    >);
     mockClient.getAllUser.mockReturnValue([
       { userId: 1, sharerOn: true },
     ] as ReturnType<VideoClient["getAllUser"]>);
@@ -115,12 +121,47 @@ describe("useScreenShareUsers", () => {
       expect(result.current).toEqual([1]);
     });
 
+    // The SDK may retain the previous participant snapshot briefly after Closed.
+    mockClient.getAllUser.mockReturnValue([
+      { userId: 1, sharerOn: true },
+    ] as ReturnType<VideoClient["getAllUser"]>);
+
     act(() => {
       connectionChangeHandler?.({ state: ConnectionState.Closed });
     });
 
     await waitFor(() => {
       expect(result.current).toEqual([]);
+    });
+  });
+
+  it("should seed already-active sharers on join when mounted before the session connects", async () => {
+    // The hook is mounted before joining: no session yet, so getAllUser() is empty.
+    mockClient.getSessionInfo.mockReturnValue({ isInMeeting: false } as ReturnType<
+      VideoClient["getSessionInfo"]
+    >);
+    mockClient.getAllUser.mockReturnValue([]);
+
+    const { result } = renderHook(() => useScreenShareUsers());
+
+    expect(result.current).toEqual([]);
+
+    // The session connects and a peer is *already* sharing. peer-share-state-change does
+    // not replay for an already-active share, so the seed must re-run on join to catch it.
+    mockClient.getSessionInfo.mockReturnValue({ isInMeeting: true, userId: 1 } as ReturnType<
+      VideoClient["getSessionInfo"]
+    >);
+    mockClient.getAllUser.mockReturnValue([
+      { userId: 1, sharerOn: false },
+      { userId: 2, sharerOn: true },
+    ] as ReturnType<VideoClient["getAllUser"]>);
+
+    act(() => {
+      connectionChangeHandler?.({ state: ConnectionState.Connected });
+    });
+
+    await waitFor(() => {
+      expect(result.current).toEqual([2]);
     });
   });
 

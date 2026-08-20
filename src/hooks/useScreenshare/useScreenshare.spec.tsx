@@ -30,7 +30,7 @@ describe("useScreenshare", () => {
     } as unknown as Mocked<VideoClient>;
 
     vi.mocked(ZoomVideo.createClient).mockReturnValue(mockClient);
-    vi.mocked(useMyself).mockReturnValue(undefined);
+    vi.mocked(useMyself).mockReturnValue(null);
   });
 
   afterEach(() => {

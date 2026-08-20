@@ -274,6 +274,55 @@ describe("VideoPlayerComponent", () => {
     });
   });
 
+  it("should not append a queued quality re-attach after unmount", async () => {
+    type AttachVideoResult = Awaited<ReturnType<MediaStream["attachVideo"]>>;
+    const reattachedVideoElement = document.createElement("video");
+    const initialAttachResult = mockVideoElement as unknown as AttachVideoResult;
+    const reattachResult = reattachedVideoElement as unknown as AttachVideoResult;
+    let resolveReattach!: (result: AttachVideoResult) => void;
+
+    mockMediaStream.attachVideo
+      .mockResolvedValueOnce(initialAttachResult)
+      .mockImplementationOnce(
+        () =>
+          new Promise<AttachVideoResult>((resolve) => {
+            resolveReattach = resolve;
+          }),
+      );
+
+    const { rerender, unmount } = render(
+      <VideoPlayerContext.Provider value={mockContainerRef}>
+        <VideoPlayerComponent user={mockParticipant} quality={2 as VideoQuality} />
+      </VideoPlayerContext.Provider>,
+    );
+
+    await vi.runAllTimersAsync();
+    await vi.waitFor(() => {
+      expect(mockContainerRef.current!.contains(mockVideoElement)).toBe(true);
+    });
+
+    rerender(
+      <VideoPlayerContext.Provider value={mockContainerRef}>
+        <VideoPlayerComponent user={mockParticipant} quality={3 as VideoQuality} />
+      </VideoPlayerContext.Provider>,
+    );
+
+    // The quality-change operation has detached the old element and is now waiting for
+    // attachVideo to resolve with its replacement.
+    await vi.waitFor(() => {
+      expect(mockMediaStream.attachVideo).toHaveBeenLastCalledWith(1234, 3);
+    });
+
+    unmount();
+    await vi.runAllTimersAsync();
+
+    // Complete the in-flight SDK operation only after the component has unmounted.
+    resolveReattach(reattachResult);
+    await vi.runAllTimersAsync();
+
+    expect(mockContainerRef.current!.querySelector("[data-user-id='1234']")).toBeNull();
+  });
+
   it("should not re-attach when quality is unchanged across re-renders", async () => {
     const { rerender } = render(
       <VideoPlayerContext.Provider value={mockContainerRef}>
@@ -296,5 +345,36 @@ describe("VideoPlayerComponent", () => {
 
     await vi.runAllTimersAsync();
     expect(mockMediaStream.detachVideo).not.toHaveBeenCalled();
+  });
+
+  it("should keep re-attaching after a queued op throws (op chain must not stay poisoned)", async () => {
+    // Force the first attach to throw inside the serialized op chain by making the DOM
+    // append blow up once. Without a .catch on the chain, opChainRef becomes a permanently
+    // rejected promise and every later .then() is skipped — so a subsequent quality change
+    // never runs its detach/attach and the video is stuck at the old quality forever.
+    vi.spyOn(mockContainerRef.current!, "appendChild").mockImplementationOnce(() => {
+      throw new Error("append failed");
+    });
+
+    const { rerender } = render(
+      <VideoPlayerContext.Provider value={mockContainerRef}>
+        <VideoPlayerComponent user={mockParticipant} quality={2 as VideoQuality} />
+      </VideoPlayerContext.Provider>,
+    );
+
+    await vi.runAllTimersAsync();
+
+    // Quality changes after the failed attach — this must still take effect.
+    rerender(
+      <VideoPlayerContext.Provider value={mockContainerRef}>
+        <VideoPlayerComponent user={mockParticipant} quality={3 as VideoQuality} />
+      </VideoPlayerContext.Provider>,
+    );
+
+    await vi.runAllTimersAsync();
+    await vi.waitFor(() => {
+      const calls = mockMediaStream.attachVideo.mock.calls;
+      expect(calls[calls.length - 1]).toEqual([1234, 3]);
+    });
   });
 });

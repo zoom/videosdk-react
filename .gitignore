@@ -6,3 +6,5 @@ dist
 .env
 playwright-report
 test-results
+.agents
+.claude

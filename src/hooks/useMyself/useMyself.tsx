@@ -20,7 +20,7 @@ import useSessionUsers from "../useSessionUsers/useSessionUsers";
 const useMyself = () => {
   const users = useSessionUsers();
   const client = ZoomVideo.createClient();
-  return users.find((user) => user.userId === client.getSessionInfo().userId);;
+  return users.find((user) => user.userId === client.getSessionInfo().userId) ?? null;
 };
 
 export default useMyself;

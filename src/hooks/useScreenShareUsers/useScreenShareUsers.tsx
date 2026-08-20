@@ -25,18 +25,11 @@ import useInMeeting from "../useInMeeting/useInMeeting";
 const useScreenShareUsers = () => {
   const [screenShareUsers, setScreenShareUsers] = React.useState<number[]>([]);
   const client = ZoomVideo.createClient();
+  // Re-run the seed when the user joins: the hook usually mounts before the session
+  // connects, so getAllUser() is empty on mount. Clear the list when the session closes.
+  const inMeeting = useInMeeting(() => setScreenShareUsers([]));
 
   React.useEffect(() => {
-    // Seed with anyone already sharing — the hook may mount after a share started.
-    // Exclude the local user: peer-share-state-change only fires for remote peers, so the
-    // local sharer would never appear via events and must not appear via the seed either.
-    const currentUserId = client.getSessionInfo().userId;
-    setScreenShareUsers(
-      client
-        .getAllUser()
-        .filter((u) => u.sharerOn && u.userId !== currentUserId)
-        .map((u) => u.userId),
-    );
     const handler: typeof event_peer_share_state_change = (e) => {
       if (e.action === "Start") {
         // Guard against duplicates if the user was already seeded
@@ -51,8 +44,22 @@ const useScreenShareUsers = () => {
     };
   }, [client]);
 
-  // Clear the sharer list when the session closes
-  useInMeeting(() => setScreenShareUsers([]));
+  React.useEffect(() => {
+    if (!inMeeting) {
+      return;
+    }
+
+    // Seed with anyone already sharing. Exclude the local user because
+    // peer-share-state-change only represents remote peers.
+    const currentUserId = client.getSessionInfo().userId;
+    const activeRemoteSharers: number[] = [];
+    for (const user of client.getAllUser()) {
+      if (user.sharerOn && user.userId !== currentUserId) {
+        activeRemoteSharers.push(user.userId);
+      }
+    }
+    setScreenShareUsers(activeRemoteSharers);
+  }, [client, inMeeting]);
 
   return screenShareUsers;
 };

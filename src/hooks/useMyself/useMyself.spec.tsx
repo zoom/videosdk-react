@@ -34,10 +34,10 @@ describe("useMyself", () => {
     vi.clearAllMocks();
   });
 
-  it("should return undefined when there is no matching local user", () => {
+  it("should preserve the public null contract when there is no matching local user", () => {
     const { result } = renderHook(() => useMyself());
 
-    expect(result.current).toBeUndefined();
+    expect(result.current).toBeNull();
   });
 
   it("should return the local participant when present", async () => {
